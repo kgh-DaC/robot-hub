@@ -2,7 +2,7 @@
 
 이 문서만 읽고도 다른 계정·새 세션에서 이어서 작업할 수 있게 유지한다. 작업이 끝날 때마다 갱신한다.
 
-마지막 갱신: 2026-11-26 (허브 완성·게시·Pages 배포 완료)
+마지막 갱신: 2026-11-26 (갤럭시 탭 대응 배포)
 
 ## 1. 한눈에 보기
 - **목표:** 첫 화면을 4칸으로 나눠 로봇 4대(SMARS, Otto, 로봇 개, 셀프 밸런싱 바이크)의 생김새와 동작을 애니메이션으로 보여준다. 로봇을 고르면 기존 제어 웹으로 들어가고, "← 처음으로" 버튼이나 무입력 3분(+경고 15초) 뒤 로봇을 멈추고 첫 화면으로 돌아온다.
@@ -32,6 +32,8 @@
 | 바이크 | `self-balancing-bike_app` / kgh-DaC/self-balancing-bike_app (private) | `self-balancing-bike_app/web/index.html` | BLE(FFE0/FFE1, Nordic UART) / Web Serial 9600 | `#estop` click (토글이라 `.active`면 건너뜀) → `#btnDisconnect` | 500ms |
 
 ## 4. 설계 핵심 (왜 이렇게 했는가)
+- **태블릿(안드로이드 Chrome):** 카드마다 이 기기에서 되는 연결을 기능 감지(`'bluetooth'/'serial' in navigator`)로 표시. 로봇 개는 `localOnly`라 로컬 허브 밖에서는 iframe 대신 로봇 Wi-Fi 페이지(http://192.168.4.1) 안내(`offsite`)를 띄운다(https 허브에서 http 로봇 IP는 혼합 콘텐츠로 막힘). 안드로이드 뒤로 가기는 history 항목으로 잡아 "처음으로"와 같이 안전 정지 후 복귀, 당겨서 새로고침 차단(overscroll-behavior), 전체 화면 버튼.
+- **SMARS는 태블릿 불가:** HC-05는 클래식 블루투스(SPP)라 Web Bluetooth(BLE 전용)로 못 붙는다. 태블릿에서 쓰려면 BLE 모듈(HM-10 등) 교체 + SMARS 펌웨어·제어 웹에 BLE 추가가 필요(SMARS 하네스 작업).
 - **로봇 폴더는 수정하지 않는다.** 각 폴더에 자기 하네스와 규칙이 있다(예: `smars_web/twin/` 수정 금지). 허브는 제어 웹을 iframe으로 그대로 띄운다.
 - **로컬 서버(같은 출처)로 연다.** 그래야 허브가 iframe 안의 입력을 감지하고 정지 버튼을 대신 누를 수 있다. file://로 열면 "확인 모드"(5분마다 계속 사용 여부를 묻기)로 바뀌고, 복귀할 때 iframe 제거(연결 끊김)만 가능하다.
 - **로봇 개 API 프록시:** 로봇 개 페이지는 localhost에서 열리면 같은 출처 `api/`를 부른다. `hub/serve.py`가 이 요청을 USB 게이트웨이 `http://127.0.0.1:8787`로 넘긴다(환경변수 `ROBOTDOG_GATEWAY`로 변경). 게이트웨이(`usb_gateway.py`)를 먼저 켜야 USB 모드가 된다. localhost에서는 Web Serial 직접 연결 버튼이 숨겨진다.
@@ -40,8 +42,9 @@
 
 ## 5. 다음 할 일
 1. Pages에서 Chrome/Edge로 4대 제어 화면을 열어 보고(BLE·Web Serial 권한 요청), 로봇 개는 로컬 허브로 쓴다.
-2. 사람이 실물로 시험: 로봇별로 연결 → 움직이는 중 "← 처음으로" → 실제로 멈추는지. 무입력 3분 자동 복귀, 키오스크 터치스크린에서 경고창 탭 시 아래 버튼이 눌리지 않는지도 확인.
-3. (선택) 로봇 레포 push 즉시 반영: 각 로봇 레포에 robot-hub로 `repository_dispatch`(type `robot-updated`)를 보내는 워크플로 + PAT 시크릿 추가. 로봇 폴더 수정이라 각 로봇 하네스에서 한다.
+2. 갤럭시 탭 실기기 확인: Chrome으로 온라인 허브 → 오토봇·바이크 BLE 연결, 뒤로 가기 제스처 시 정지·복귀, 로봇 개 Wi-Fi 안내 흐름. 삼성 인터넷은 Web Bluetooth 없을 수 있음.
+3. 사람이 실물로 시험: 로봇별로 연결 → 움직이는 중 "← 처음으로" → 실제로 멈추는지. 무입력 3분 자동 복귀, 키오스크 터치스크린에서 경고창 탭 시 아래 버튼이 눌리지 않는지도 확인.
+4. (선택) 로봇 레포 push 즉시 반영: 각 로봇 레포에 robot-hub로 `repository_dispatch`(type `robot-updated`)를 보내는 워크플로 + PAT 시크릿 추가. 로봇 폴더 수정이라 각 로봇 하네스에서 한다.
 
 ## 6. 미해결·주의
 - 로봇 레포 변경은 **push된 커밋만** Pages에 반영된다(최대 1시간 지연). 로컬 허브는 폴더를 직접 띄우므로 즉시 반영. 로봇에 새 동작이 생기면 첫 화면 애니메이션은 자동으로 안 바뀐다(인벤토리·애니메이터 재실행).
@@ -72,3 +75,4 @@
 | 2026-11-25 | 하네스 구축, 인벤토리 4대, ottobot·robot-dog private 레포 게시, 허브 제작 시작 |
 | 2026-11-26 | QA 3회차(결함 #6·#9 수정, #10 터치 관통 수정·재검증), robot-hub public 게시·서브모듈 4개, 로봇 레포 3개 public 전환, Pages(Actions)+서브모듈 자동 최신화 워크플로 추가 — 첫 배포는 GitHub 장애로 실패 |
 | 2026-11-26 | Pages 배포 실패 원인: GitHub 장애 + 구버전 액션(deploy-pages@v4·upload-pages-artifact@v3에서 artifact 조회 실패). configure-pages@v6·upload-pages-artifact@v5·deploy-pages@v5로 올려 배포 성공. README 추가 |
+| 2026-11-26 | 갤럭시 탭 대응(카드별 연결 가능 표시, 로봇 개 offsite 안내, 뒤로 가기=안전 복귀, 새로고침 방지, 전체 화면, 세로 2x2). 태블릿 에뮬레이션으로 로컬·Pages 검증 |
