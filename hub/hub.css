@@ -260,7 +260,7 @@ button { font: inherit; }
 .stop-warn h2 { color: var(--bad-text); }
 .stop-warn .sub { font-weight: 700; font-variant-numeric: tabular-nums; }
 .dialog .actions { display: flex; gap: 12px; margin-top: 18px; }
-.dialog .actions > button { flex: 1; width: auto; }
+.dialog .actions > button, .dialog .actions > a { flex: 1; width: auto; }
 .btn-secondary {
   min-height: 64px;
   border: 2px solid var(--border);
