@@ -2,7 +2,7 @@
 
 이 문서만 읽고도 다른 계정·새 세션에서 이어서 작업할 수 있게 유지한다. 작업이 끝날 때마다 갱신한다.
 
-마지막 갱신: 2026-11-26 (허브 완성·게시, Pages 첫 배포 대기)
+마지막 갱신: 2026-11-26 (허브 완성·게시·Pages 배포 완료)
 
 ## 1. 한눈에 보기
 - **목표:** 첫 화면을 4칸으로 나눠 로봇 4대(SMARS, Otto, 로봇 개, 셀프 밸런싱 바이크)의 생김새와 동작을 애니메이션으로 보여준다. 로봇을 고르면 기존 제어 웹으로 들어가고, "← 처음으로" 버튼이나 무입력 3분(+경고 15초) 뒤 로봇을 멈추고 첫 화면으로 돌아온다.
@@ -19,7 +19,7 @@
 | QA | 3회차 + 메인 재검증 완료, 남은 결함 없음 (`_workspace/05_qa_report.md`) |
 | 허브 레포 | https://github.com/kgh-DaC/robot-hub (public), 로봇 4개 서브모듈 |
 | 로봇 레포 공개 | lecture-SMARS·ottobot·robot-dog·self-balancing-bike_app 모두 public (2026-11-26) |
-| GitHub Pages | 켜짐(Actions 소스), 주소 https://kgh-dac.github.io/robot-hub/ — **첫 배포 실패**(GitHub Actions/Pages 장애, deploy-pages 500). 매시 17분 자동 재시도 |
+| GitHub Pages | https://kgh-dac.github.io/robot-hub/ 배포 완료(Actions 소스). index·제어 웹 4개·모듈 200 확인 |
 | 로봇 변경 자동 반영 | `.github/workflows/pages.yml`: push·매시간·수동·repository_dispatch(robot-updated) 때 서브모듈을 각 레포 최신으로 올리고 재배포 |
 | 실물 로봇 정지 시험 | 미시험 (사람이 해야 함) |
 
@@ -39,7 +39,7 @@
 - **애니메이션은 실제 구현된 동작만** 보여준다(인벤토리 근거 필수).
 
 ## 5. 다음 할 일
-1. Pages 배포 성공 확인: `gh run list -R kgh-DaC/robot-hub -L 3`. 실패가 계속되면 `gh workflow run pages.yml -R kgh-DaC/robot-hub`. 성공하면 `index.html`과 제어 웹 4개 경로가 200인지 확인.
+1. Pages에서 Chrome/Edge로 4대 제어 화면을 열어 보고(BLE·Web Serial 권한 요청), 로봇 개는 로컬 허브로 쓴다.
 2. 사람이 실물로 시험: 로봇별로 연결 → 움직이는 중 "← 처음으로" → 실제로 멈추는지. 무입력 3분 자동 복귀, 키오스크 터치스크린에서 경고창 탭 시 아래 버튼이 눌리지 않는지도 확인.
 3. (선택) 로봇 레포 push 즉시 반영: 각 로봇 레포에 robot-hub로 `repository_dispatch`(type `robot-updated`)를 보내는 워크플로 + PAT 시크릿 추가. 로봇 폴더 수정이라 각 로봇 하네스에서 한다.
 
@@ -71,3 +71,4 @@
 | --- | --- |
 | 2026-11-25 | 하네스 구축, 인벤토리 4대, ottobot·robot-dog private 레포 게시, 허브 제작 시작 |
 | 2026-11-26 | QA 3회차(결함 #6·#9 수정, #10 터치 관통 수정·재검증), robot-hub public 게시·서브모듈 4개, 로봇 레포 3개 public 전환, Pages(Actions)+서브모듈 자동 최신화 워크플로 추가 — 첫 배포는 GitHub 장애로 실패 |
+| 2026-11-26 | Pages 배포 실패 원인: GitHub 장애 + 구버전 액션(deploy-pages@v4·upload-pages-artifact@v3에서 artifact 조회 실패). configure-pages@v6·upload-pages-artifact@v5·deploy-pages@v5로 올려 배포 성공. README 추가 |
