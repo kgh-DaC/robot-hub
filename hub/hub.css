@@ -45,7 +45,8 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
+html, body { height: 100%; margin: 0; overscroll-behavior: none; }   /* 태블릿: 당겨서 새로고침으로 제어 중 페이지가 날아가지 않게 */
+@supports (height: 100dvh) { html, body { height: 100dvh; } }         /* 모바일 주소창 높이 변화 대응 */
 body {
   background: var(--bg);
   color: var(--text);
@@ -96,6 +97,8 @@ button { font: inherit; }
   padding: clamp(10px, 1.4vw, 18px);
   cursor: pointer;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;            /* 길게 누름 메뉴 방지 */
   touch-action: manipulation;
   overflow: hidden;
   transition: border-color .15s, transform .15s;
@@ -106,7 +109,7 @@ button { font: inherit; }
   height: 6px;
   background: var(--accent);
 }
-.card:hover { border-color: var(--accent); }
+@media (hover: hover) { .card:hover { border-color: var(--accent); } }   /* 터치 기기에서 hover 가 남지 않게 */
 .card:active { transform: scale(0.99); }
 .card:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }
 
@@ -159,8 +162,27 @@ button { font: inherit; }
   z-index: 30;
 }
 
-/* 세로 화면·좁은 폭: 1열, 스크롤 */
-@media (max-width: 760px), (max-aspect-ratio: 4/5) {
+/* 이 기기에서의 연결 가능 여부(제약이 있을 때만 표시) */
+.card-env { margin: 6px 0 0; padding: 4px 10px; border-radius: 8px; font-size: clamp(13px, 1.2vw, 16px); font-weight: 600; align-self: flex-start; }
+.card-env.info { background: var(--fill-2); color: var(--text); }
+.card-env.warn { background: var(--warn-bg); color: var(--warn-text); }
+
+.btn-full {
+  margin-top: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--fill);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* 좁은 폭(휴대폰): 1열, 스크롤. 세로 태블릿(갤럭시 탭 800px 안팎)은 2x2 유지 */
+@media (max-width: 600px) {
   body { overflow: auto; }
   .intro { height: auto; min-height: 100%; }
   .grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: minmax(320px, 46vh); }
@@ -191,7 +213,7 @@ button { font: inherit; }
   cursor: pointer;
   touch-action: manipulation;
 }
-.btn-home:hover { background: var(--fill-2); color: var(--text); }
+@media (hover: hover) { .btn-home:hover { background: var(--fill-2); color: var(--text); } }
 .robot-name { margin: 0; font-size: 22px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .idle-left { margin: 0 0 0 auto; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mode-note { margin: 0; padding: 8px 14px; background: var(--warn-bg); color: var(--warn-text); font-size: 15px; }
@@ -250,6 +272,10 @@ button { font: inherit; }
   cursor: pointer;
   touch-action: manipulation;
 }
+.btn-link { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.dialog .steps { margin: 4px 0 8px; padding-left: 1.4em; text-align: left; font-size: 17px; line-height: 1.5; }
+.dialog .steps li { margin: 2px 0; }
+.dialog .note { font-size: 15px; color: var(--muted); }
 .btn-primary:focus-visible, .btn-secondary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 @media (max-width: 520px) { .dialog .actions { flex-direction: column; } }
 

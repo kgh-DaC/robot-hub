@@ -14,6 +14,7 @@
   <header class="intro-head">
     <h1>로봇 통합 제어 허브</h1>
     <p class="lead">로봇을 선택하세요</p>
+    <button id="btnFull" class="btn-full" type="button" hidden>전체 화면</button>
     <div id="notices" class="notices" hidden></div>
   </header>
   <div id="grid" class="grid"></div>
@@ -47,6 +48,19 @@
     <div class="actions">
       <button id="btnLeaveAnyway" class="btn-secondary" type="button">그래도 나가기</button>
       <button id="btnBackToControl" class="btn-primary" type="button">제어 화면으로 돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<div id="offsite" class="overlay" role="dialog" aria-modal="true" aria-labelledby="offsiteTitle" aria-describedby="offsiteText" hidden>
+  <div class="dialog">
+    <h2 id="offsiteTitle"></h2>
+    <p id="offsiteText"></p>
+    <ol id="offsiteSteps" class="steps"></ol>
+    <p id="offsiteNote" class="note" hidden></p>
+    <div class="actions">
+      <button id="btnOffsiteClose" class="btn-secondary" type="button">닫기</button>
+      <a id="offsiteLink" class="btn-primary btn-link" target="_blank" rel="noopener"></a>
     </div>
   </div>
 </div>

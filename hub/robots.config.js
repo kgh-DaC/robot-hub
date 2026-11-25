@@ -87,6 +87,22 @@ window.ROBOTS = [
     pagesUrl: null,
     // connection.type = ["serial","wifi"]. 허브(localhost)에서는 USB 게이트웨이 경유
     connection: ['serial', 'wifi'],
+    // 이 페이지는 http://localhost 에서만 게이트웨이 모드가 된다(index.html:330). 온라인 허브(https)·태블릿에서는
+    // 같은 출처 api/ 가 없어 연결할 수 없고, 로봇 IP(http)는 https 허브 안에서 혼합 콘텐츠로 막힌다.
+    // → localOnly: 로컬 허브가 아니면 iframe 대신 offsite 안내(로봇이 직접 내주는 페이지, inventory hosting.modes.robot_served)를 띄운다.
+    localOnly: true,
+    offsite: {
+      title: '로봇 개는 로봇 Wi-Fi로 연결합니다',
+      text: '이 화면(온라인 허브·태블릿)에서는 로봇 개에 연결할 수 없습니다. 로봇이 직접 내주는 제어 페이지를 여세요.',
+      steps: [
+        '로봇 개 전원을 켭니다.',
+        '태블릿 Wi-Fi 설정에서 RobotDog-로 시작하는 Wi-Fi에 연결합니다(인터넷 없음 알림이 나오면 연결 유지).',
+        '아래 "로봇 페이지 열기"를 누릅니다(새 탭, http://192.168.4.1).'
+      ],
+      url: 'http://192.168.4.1/',
+      label: '로봇 페이지 열기',
+      note: '이 방식에서는 허브의 무입력 복귀·자동 정지가 적용되지 않습니다. 다 쓰면 로봇 페이지에서 정지를 누르세요.'
+    },
     stop: {
       steps: [
         // stop.page_hook_selector: #stop click → stop() → POST api/command cmd=STOP (index.html:150, 1580, 789-794)

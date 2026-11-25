@@ -16,6 +16,14 @@
 ### 온라인
 https://kgh-dac.github.io/robot-hub/ 를 **Chrome 또는 Edge**로 엽니다. Web Bluetooth와 Web Serial은 이 두 브라우저에서만 동작합니다.
 
+### 태블릿 (갤럭시 탭 등 안드로이드)
+- **Chrome**으로 온라인 주소를 엽니다. 삼성 인터넷은 Web Bluetooth가 없을 수 있습니다.
+- 첫 화면의 "전체 화면" 버튼으로 키오스크처럼 쓸 수 있습니다. 제어 중 뒤로 가기(제스처·버튼)는 "← 처음으로"와 같게 로봇을 멈추고 첫 화면으로 돌아갑니다.
+- 로봇별로 태블릿에서 되는 연결은 카드에 표시됩니다.
+  - 오토봇·바이크: BLE로 연결됩니다.
+  - SMARS: HC-05는 클래식 블루투스라 태블릿 브라우저로 연결할 수 없습니다(BLE 모듈로 바꾸고 SMARS 제어 웹에 BLE를 추가해야 함). 브라우저에 Web Serial이 있으면 USB-OTG로는 시도할 수 있습니다.
+  - 로봇 개: 카드를 누르면 연결 방법이 나옵니다. 태블릿을 로봇 개 Wi-Fi(RobotDog-…)에 연결한 뒤 로봇이 내주는 페이지(http://192.168.4.1)를 엽니다. 이때는 허브의 자동 복귀·자동 정지가 적용되지 않습니다.
+
 ### 내 컴퓨터에서 (권장)
 ```bash
 git clone --recurse-submodules https://github.com/kgh-DaC/robot-hub.git

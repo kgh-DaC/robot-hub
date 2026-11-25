@@ -39,6 +39,10 @@
   var ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'input'];
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
   var isFileUrl = location.protocol === 'file:';
+  // 이 컴퓨터에서 start_hub.bat(hub/serve.py)으로 연 허브인가. localOnly 로봇은 여기서만 iframe 으로 연다.
+  var isLocalHub = location.protocol === 'http:' && /^(localhost|127\.\d+\.\d+\.\d+)(:\d+)?$/i.test(location.host);
+  var CONN_SUPPORT = { ble: 'bluetooth' in navigator, serial: 'serial' in navigator, wifi: true };
+  var CONN_API = { ble: 'Web Bluetooth', serial: 'Web Serial' };
 
   // ---------------------------------------------------------------- DOM
   var $ = function (id) { return document.getElementById(id); };
@@ -85,6 +89,14 @@
     el.btnLeaveAnyway = $('btnLeaveAnyway');
     el.btnBackToControl = $('btnBackToControl');
     el.toast = $('toast');
+    el.btnFull = $('btnFull');
+    el.offsite = $('offsite');
+    el.offsiteTitle = $('offsiteTitle');
+    el.offsiteText = $('offsiteText');
+    el.offsiteSteps = $('offsiteSteps');
+    el.offsiteNote = $('offsiteNote');
+    el.offsiteLink = $('offsiteLink');
+    el.btnOffsiteClose = $('btnOffsiteClose');
     el.notices = $('notices');
 
     showEnvNotices();
@@ -103,12 +115,17 @@
     el.overlay.addEventListener('touchend', function (e) { e.preventDefault(); markInput(); }, { passive: false });
     el.btnLeaveAnyway.addEventListener('click', function () { resolveStopWarn('leave'); });
     el.btnBackToControl.addEventListener('click', function () { resolveStopWarn('back'); });
+    el.btnOffsiteClose.addEventListener('click', hideOffsite);
+    el.offsite.addEventListener('click', function (e) { if (e.target === el.offsite) hideOffsite(); });
+    setupFullscreen();
+    setupHistory();
 
     // 허브 문서의 입력. iframe 안 입력은 iframe 창에서 따로 받는다.
     ACTIVITY_EVENTS.forEach(function (t) { document.addEventListener(t, markInput, { capture: true, passive: true }); });
     // Esc = 나가기. 허브 문서에 포커스가 있을 때만 온다. iframe 안의 Esc 는 로봇 페이지 몫(로봇 개·바이크는 Esc=정지)이라 가로채지 않는다.
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && state === 'control') { e.preventDefault(); exitToIntro('esc'); }
+      else if (e.key === 'Escape' && !el.offsite.hidden) { e.preventDefault(); hideOffsite(); }
     });
 
     if (reduceMotion && reduceMotion.addEventListener) reduceMotion.addEventListener('change', resetCardTimes);
@@ -127,17 +144,14 @@
     if (isFileUrl) {
       msgs.push({ kind: 'bad', text: '파일로 직접 열었습니다. 로봇 정지·자동 복귀가 제대로 동작하려면 start_hub.bat으로 여세요.' });
     } else if (!window.isSecureContext) {
-      msgs.push({ kind: 'bad', text: '보안 연결이 아니라 블루투스·USB를 쓸 수 없습니다. start_hub.bat으로 여세요 (http://localhost:8800/).' });
+      msgs.push({ kind: 'bad', text: '보안 연결이 아니라 블루투스·USB를 쓸 수 없습니다. 온라인 허브(https)나 이 컴퓨터의 start_hub.bat(http://localhost:8800/)으로 여세요.' });
     }
-    var brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
-    var chromium = brands.some(function (b) { return /Chrom|Edge/i.test(b.brand); }) || /Chrome\/|Edg\//.test(navigator.userAgent);
-    var missing = [];
-    if (!('bluetooth' in navigator)) missing.push('Web Bluetooth');
-    if (!('serial' in navigator)) missing.push('Web Serial');
-    if (!chromium || missing.length) {
-      msgs.push({ kind: 'warn', text: (chromium ? '' : 'Chrome 또는 Edge가 아닙니다. ') +
-        (missing.length ? '이 브라우저에는 ' + missing.join('·') + '가 없어 로봇 연결이 안 될 수 있습니다. ' : '') +
-        '데스크톱 Chrome/Edge로 여세요.' });
+    // 로봇별 제약은 카드에 따로 표시한다(cardEnv). 여기서는 블루투스가 없을 때만 브라우저를 바꾸라고 안내한다.
+    // 예: 삼성 인터넷·iPad Safari 등은 Web Bluetooth 가 없을 수 있다. 안드로이드 Chrome 은 Web Bluetooth 가 있다.
+    if (!CONN_SUPPORT.ble && !CONN_SUPPORT.serial) {
+      msgs.push({ kind: 'warn', text: '이 브라우저는 블루투스·USB 연결을 지원하지 않습니다. 태블릿은 Chrome, 컴퓨터는 Chrome이나 Edge로 여세요.' });
+    } else if (!CONN_SUPPORT.ble) {
+      msgs.push({ kind: 'warn', text: '이 브라우저에는 Web Bluetooth가 없어 블루투스 로봇을 연결할 수 없습니다. Chrome으로 여세요.' });
     }
     msgs.forEach(function (m) { el.notices.appendChild(h('p', 'notice ' + m.kind, m.text)); });
     el.notices.hidden = !msgs.length;
@@ -160,6 +174,7 @@
       var badges = h('div', 'badges');
       (robot.connection || []).forEach(function (c) { badges.appendChild(h('span', 'badge', CONN_LABEL[c] || c)); });
       head.appendChild(badges);
+      var env = cardEnv(robot);
 
       var stage = h('div', 'stage');
       var foot = h('div', 'card-foot');
@@ -171,6 +186,7 @@
       foot.appendChild(dots);
 
       root.appendChild(head);
+      if (env.text) root.appendChild(h('p', 'card-env ' + env.kind, env.text));
       root.appendChild(stage);
       root.appendChild(foot);
       el.grid.appendChild(root);
@@ -179,11 +195,86 @@
       cards.push(card);
       setPending(card, '불러오는 중');
 
-      root.addEventListener('click', function () { enterRobot(robot); });
+      var open = env.offsite ? function () { showOffsite(robot); } : function () { enterRobot(robot); };
+      root.addEventListener('click', open);
       root.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') { e.preventDefault(); enterRobot(robot); }
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') { e.preventDefault(); open(); }
       });
     });
+  }
+
+  // 이 기기·이 허브에서 로봇을 연결할 수 있는가. 제약이 없으면 text 는 비어 있다(카드에 아무것도 안 붙음).
+  function cardEnv(robot) {
+    if (robot.localOnly) {
+      if (isLocalHub) return { kind: '', text: '' };
+      return { kind: 'warn', text: robot.offsite ? '이 화면에서는 연결 불가 · 눌러서 연결 방법 보기' : '이 컴퓨터의 start_hub.bat에서만 연결됩니다', offsite: !!robot.offsite };
+    }
+    var conns = robot.connection || [];
+    var ok = conns.filter(function (c) { return CONN_SUPPORT[c] !== false; });
+    var missing = conns.filter(function (c) { return CONN_SUPPORT[c] === false; }).map(function (c) { return CONN_API[c] || c; });
+    if (!missing.length) return { kind: '', text: '' };
+    if (!ok.length) return { kind: 'warn', text: '이 브라우저에서는 연결할 수 없습니다(' + missing.join('·') + ' 없음)' };
+    return { kind: 'info', text: '이 기기에서는 ' + ok.map(function (c) { return CONN_LABEL[c] || c; }).join('·') + '로 연결' };
+  }
+
+  // localOnly 로봇을 로컬 허브 밖(온라인·태블릿)에서 골랐을 때의 안내
+  function showOffsite(robot) {
+    if (state !== 'intro' || !robot.offsite) return;
+    var o = robot.offsite;
+    el.offsiteTitle.textContent = o.title || robot.name;
+    el.offsiteText.textContent = o.text || '';
+    el.offsiteSteps.textContent = '';
+    (o.steps || []).forEach(function (s) { el.offsiteSteps.appendChild(h('li', '', s)); });
+    el.offsiteSteps.hidden = !(o.steps && o.steps.length);
+    el.offsiteNote.textContent = o.note || '';
+    el.offsiteNote.hidden = !o.note;
+    el.offsiteLink.hidden = !o.url;
+    if (o.url) { el.offsiteLink.href = o.url; el.offsiteLink.textContent = o.label || '열기'; }
+    el.offsite.hidden = false;
+    el.btnOffsiteClose.focus();
+  }
+  function hideOffsite() { el.offsite.hidden = true; }
+
+  // 태블릿 키오스크용 전체 화면(지원할 때만 버튼 표시). 같은 문서 안 상태 전환이라 제어 화면에서도 유지된다.
+  function setupFullscreen() {
+    var d = document, root = d.documentElement;
+    var req = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (!req || !(d.fullscreenEnabled || d.webkitFullscreenEnabled)) return;
+    var cur = function () { return d.fullscreenElement || d.webkitFullscreenElement; };
+    var sync = function () { el.btnFull.textContent = cur() ? '전체 화면 끝내기' : '전체 화면'; };
+    el.btnFull.hidden = false;
+    sync();
+    el.btnFull.addEventListener('click', function () {
+      try {
+        if (cur()) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+        else { var p = req.call(root); if (p && p.catch) p.catch(function () { /* 거절 무시 */ }); }
+      } catch (e) { /* 무시 */ }
+    });
+    d.addEventListener('fullscreenchange', sync);
+    d.addEventListener('webkitfullscreenchange', sync);
+  }
+
+  // 안드로이드 뒤로 가기(제스처·버튼)가 허브를 떠나 정지 절차를 건너뛰지 않게:
+  // 제어 화면에 들어갈 때 기록을 하나 쌓고, 뒤로 가기는 "← 처음으로"와 같이 처리한다.
+  var popIgnore = false;
+  function setupHistory() {
+    if (!window.history || !history.pushState) return;
+    window.addEventListener('popstate', function () {
+      if (popIgnore) { popIgnore = false; return; }
+      if (state === 'control') { exitToIntro('back'); return; }
+      if (state === 'exiting' || state === 'stopwarn') { pushControlHistory(); return; }
+      if (!el.offsite.hidden) hideOffsite();
+    });
+    // 제어 중 새로고침·탭 닫기: 브라우저가 허락하면 확인을 묻는다(정지 절차를 거치지 않으므로)
+    window.addEventListener('beforeunload', function (e) {
+      if (state === 'control' || state === 'exiting' || state === 'stopwarn') { e.preventDefault(); e.returnValue = ''; }
+    });
+  }
+  function pushControlHistory() {
+    try { if (!(history.state && history.state.hubControl)) history.pushState({ hubControl: true }, ''); } catch (e) { /* 무시 */ }
+  }
+  function popControlHistory() {
+    try { if (history.state && history.state.hubControl) { popIgnore = true; history.back(); } } catch (e) { popIgnore = false; }
   }
 
   function setPending(card, text) {
@@ -280,8 +371,10 @@
   // ---------------------------------------------------------------- control 진입
   function enterRobot(robot) {
     if (state !== 'intro') return;
+    hideOffsite();
     current = robot;
     state = 'control';
+    pushControlHistory();
     sameOrigin = false;
     boundWin = null;
 
@@ -481,6 +574,7 @@
     }
     // 제어 화면으로 돌아가기: 무입력 타이머를 새로 시작하고 iframe 에 포커스
     state = 'control';
+    pushControlHistory();   // 뒤로 가기로 나왔다가 돌아온 경우 기록을 다시 쌓는다
     lastInput = Date.now();
     confirmStart = Date.now();
     warnStart = 0;
@@ -688,6 +782,7 @@
     el.intro.hidden = false;
     document.title = '로봇 통합 제어 허브';
     state = 'intro';
+    popControlHistory();   // 버튼·자동 복귀로 나왔으면 제어 화면 기록을 걷어 낸다(뒤로 가기로 나왔으면 이미 없음)
     resetCardTimes();
     if (cards[0]) cards[0].root.focus();
   }
