@@ -57,9 +57,9 @@ jobs:
           submodules: recursive
       - name: 숨김 파일 제외(로컬 serve.py와 같은 규칙)
         run: find . -mindepth 1 -name '.*' -prune -exec rm -rf {} +
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: .
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
