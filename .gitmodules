@@ -1,0 +1,16 @@
+[submodule "smars_web"]
+	path = smars_web
+	url = https://github.com/kgh-DaC/lecture-SMARS.git
+	branch = main
+[submodule "ottobot"]
+	path = ottobot
+	url = https://github.com/kgh-DaC/ottobot.git
+	branch = master
+[submodule "robot_dog"]
+	path = robot_dog
+	url = https://github.com/kgh-DaC/robot-dog.git
+	branch = main
+[submodule "self-balancing-bike_app"]
+	path = self-balancing-bike_app
+	url = https://github.com/kgh-DaC/self-balancing-bike_app.git
+	branch = main

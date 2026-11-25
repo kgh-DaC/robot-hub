@@ -1,0 +1,65 @@
+# 통합 로봇 허브 GitHub Pages 배포 + 로봇 서브모듈 자동 최신화
+# - 로봇 레포(smars_web/ottobot/robot_dog/self-balancing-bike_app)에 push된 변경을
+#   매시간(또는 수동 실행·repository_dispatch) 가져와 서브모듈 포인터를 갱신하고 Pages에 다시 배포한다.
+# - 로봇 레포 쪽에서 즉시 반영하려면 그 레포에서 이 레포로 repository_dispatch(type: robot-updated)를 보내면 된다.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 * * * *"      # 매시 17분
+  workflow_dispatch:
+  repository_dispatch:
+    types: [robot-updated]
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: 로봇 서브모듈을 각 레포 최신 커밋으로
+        run: git submodule update --init --remote --recursive
+      - name: 바뀐 포인터 커밋
+        run: |
+          if git diff --quiet; then
+            echo "로봇 레포 변경 없음"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: 로봇 서브모듈 최신화 ($(git submodule status | awk '{print substr($1,1,7)" "$2}' | tr '\n' ' '))"
+            git push
+          fi
+
+  deploy:
+    needs: sync
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          submodules: recursive
+      - name: 숨김 파일 제외(로컬 serve.py와 같은 규칙)
+        run: find . -mindepth 1 -name '.*' -prune -exec rm -rf {} +
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

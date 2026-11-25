@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>로봇 통합 제어 허브</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="hub/hub.css">
+</head>
+<body>
+
+<main id="intro" class="intro">
+  <header class="intro-head">
+    <h1>로봇 통합 제어 허브</h1>
+    <p class="lead">로봇을 선택하세요</p>
+    <div id="notices" class="notices" hidden></div>
+  </header>
+  <div id="grid" class="grid"></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+</main>
+
+<section id="control" class="control" hidden>
+  <header class="topbar">
+    <button id="btnHome" class="btn-home" type="button" aria-keyshortcuts="Escape">← 처음으로</button>
+    <h1 id="robotName" class="robot-name"></h1>
+    <p id="idleLeft" class="idle-left" aria-live="off"></p>
+  </header>
+  <p id="modeNote" class="mode-note" role="note" hidden></p>
+  <div id="frameHost" class="frame-host"></div>
+</section>
+
+<div id="overlay" class="overlay" role="alertdialog" aria-modal="true" aria-labelledby="overlayTitle" aria-describedby="overlayText" hidden>
+  <div class="dialog">
+    <h2 id="overlayTitle"></h2>
+    <p id="overlayText"></p>
+    <p id="overlayCount" class="count"></p>
+    <button id="btnContinue" class="btn-primary" type="button">계속 사용</button>
+  </div>
+</div>
+
+<div id="stopWarn" class="overlay stop-warn" role="alertdialog" aria-modal="true" aria-labelledby="stopWarnTitle" aria-describedby="stopWarnText" hidden>
+  <div class="dialog">
+    <h2 id="stopWarnTitle">정지 명령이 전달되지 않았을 수 있습니다. 로봇 전원을 확인하세요</h2>
+    <p id="stopWarnText"></p>
+    <p id="stopWarnCount" class="sub" hidden></p>
+    <div class="actions">
+      <button id="btnLeaveAnyway" class="btn-secondary" type="button">그래도 나가기</button>
+      <button id="btnBackToControl" class="btn-primary" type="button">제어 화면으로 돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<div id="busy" class="overlay busy" role="status" hidden>
+  <div class="dialog"><p>로봇을 멈추는 중입니다…</p></div>
+</div>
+
+<!-- 순서 중요: 설정 → 셸(window.RobotHub 정의) → 셸이 hub/robots/{id}.js 를 classic script 로 불러온다 -->
+<script src="hub/robots.config.js"></script>
+<script src="hub/hub.js"></script>
+</body>
+</html>

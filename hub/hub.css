@@ -1,0 +1,259 @@
+/* 통합 로봇 허브 공통 스타일. 디자인 토큰은 robot-motion-animation 스킬 「디자인 토큰」. */
+:root {
+  /* 애니메이션 모듈용 토큰(모듈은 이 변수만 쓴다) */
+  --line: #1f2937;
+  --fill: #ffffff;
+  --fill-2: #e5e7eb;
+  --c-smars: #2563eb;
+  --c-ottobot: #f59e0b;
+  --c-robotdog: #10b981;
+  --c-bike: #ef4444;
+  --fx: currentColor;
+
+  /* 셸 전용 */
+  --bg: #f3f4f6;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --focus: #2563eb;
+  --warn-bg: #fef3c7;
+  --warn-text: #78350f;
+  --bad-bg: #fee2e2;
+  --bad-text: #7f1d1d;
+  --radius: 16px;
+  --gap: clamp(10px, 1.6vw, 20px);
+  --topbar-h: 64px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --line: #e5e7eb;
+    --fill: #111827;
+    --fill-2: #374151;   /* 오케스트레이터 결정: 보조면이 밝은 선과 뭉치지 않게 */
+
+    --bg: #030712;
+    --text: #f9fafb;
+    --muted: #9ca3af;
+    --border: #374151;
+    --focus: #60a5fa;
+    --warn-bg: #422006;
+    --warn-text: #fde68a;
+    --bad-bg: #450a0a;
+    --bad-text: #fecaca;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+[hidden] { display: none !important; }
+button { font: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* ------------------------------------------------------------ intro */
+.intro {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap);
+  gap: var(--gap);
+}
+.intro-head { text-align: center; }
+.intro-head h1 { margin: 0; font-size: clamp(22px, 2.6vw, 34px); font-weight: 800; letter-spacing: -0.01em; }
+.lead { margin: 4px 0 0; font-size: clamp(15px, 1.5vw, 20px); color: var(--muted); }
+.notices { display: flex; flex-direction: column; gap: 6px; margin: 10px auto 0; max-width: 900px; }
+.notice { margin: 0; padding: 8px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; }
+.notice.warn { background: var(--warn-bg); color: var(--warn-text); }
+.notice.bad { background: var(--bad-bg); color: var(--bad-text); font-weight: 600; }
+
+.grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.card {
+  --accent: var(--line);
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--fill);
+  color: var(--line);                 /* --fx: currentColor 가 선 색을 따르게 */
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(10px, 1.4vw, 18px);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  overflow: hidden;
+  transition: border-color .15s, transform .15s;
+}
+.card::before {                         /* 강조색은 위쪽 띠 한 곳에만 */
+  content: "";
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 6px;
+  background: var(--accent);
+}
+.card:hover { border-color: var(--accent); }
+.card:active { transform: scale(0.99); }
+.card:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }
+
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.card-titles { min-width: 0; }
+.card-name { margin: 0; color: var(--text); font-size: clamp(18px, 2vw, 28px); font-weight: 800; }
+.card-tag { margin: 2px 0 0; color: var(--muted); font-size: clamp(13px, 1.2vw, 17px); }
+.badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; flex-shrink: 0; }
+.badge {
+  padding: 3px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0;
+}
+.stage > svg { width: 100%; height: 100%; max-height: 100%; display: block; }
+.stage-pending {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: clamp(16px, 1.6vw, 22px);
+}
+
+.card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; }
+.caption { margin: 0; color: var(--text); font-size: clamp(17px, 1.8vw, 24px); font-weight: 700; }
+.dots { display: flex; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--fill-2); border: 1.5px solid var(--border); }
+.dot.on { background: var(--accent); border-color: var(--accent); }
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  padding: 14px 22px;
+  border-radius: 12px;
+  background: var(--bad-bg); color: var(--bad-text);
+  font-size: 18px; font-weight: 700;
+  box-shadow: 0 6px 24px rgb(0 0 0 / .18);
+  z-index: 30;
+}
+
+/* 세로 화면·좁은 폭: 1열, 스크롤 */
+@media (max-width: 760px), (max-aspect-ratio: 4/5) {
+  body { overflow: auto; }
+  .intro { height: auto; min-height: 100%; }
+  .grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: minmax(320px, 46vh); }
+  .card-head { flex-wrap: wrap; }
+  .badges { justify-content: flex-start; }
+}
+
+/* ------------------------------------------------------------ control */
+.control { height: 100%; display: flex; flex-direction: column; }
+.topbar {
+  flex: 0 0 var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--fill);
+  border-bottom: 2px solid var(--border);
+}
+.btn-home {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--fill);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn-home:hover { background: var(--fill-2); color: var(--text); }
+.robot-name { margin: 0; font-size: 22px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idle-left { margin: 0 0 0 auto; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mode-note { margin: 0; padding: 8px 14px; background: var(--warn-bg); color: var(--warn-text); font-size: 15px; }
+.frame-host { flex: 1; min-height: 0; position: relative; background: #fff; }
+.robot-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+
+/* ------------------------------------------------------------ overlays */
+.overlay {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgb(0 0 0 / .55);
+  z-index: 20;
+  padding: 20px;
+}
+.dialog {
+  width: min(520px, 100%);
+  padding: 28px;
+  border-radius: 20px;
+  background: var(--fill);
+  color: var(--text);
+  text-align: center;
+  box-shadow: 0 12px 40px rgb(0 0 0 / .3);
+}
+.dialog h2 { margin: 0 0 8px; font-size: 26px; }
+.dialog p { margin: 0 0 8px; font-size: 18px; line-height: 1.5; }
+.dialog .count { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 8px 0 18px; }
+.btn-primary {
+  min-height: 64px;
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  background: var(--focus);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.busy { z-index: 25; }
+
+/* 정지 미도달 경고: 무입력 경고보다 위, iframe 은 뒤에 남아 있다 */
+.stop-warn { z-index: 30; }
+.stop-warn .dialog { width: min(600px, 100%); border: 3px solid var(--bad-text); }
+.stop-warn h2 { color: var(--bad-text); }
+.stop-warn .sub { font-weight: 700; font-variant-numeric: tabular-nums; }
+.dialog .actions { display: flex; gap: 12px; margin-top: 18px; }
+.dialog .actions > button { flex: 1; width: auto; }
+.btn-secondary {
+  min-height: 64px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn-primary:focus-visible, .btn-secondary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+@media (max-width: 520px) { .dialog .actions { flex-direction: column; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .card:active { transform: none; }
+}
