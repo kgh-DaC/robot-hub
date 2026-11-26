@@ -2,7 +2,7 @@
 
 이 문서만 읽고도 다른 계정·새 세션에서 이어서 작업할 수 있게 유지한다. 작업이 끝날 때마다 갱신한다.
 
-마지막 갱신: 2026-11-26 (file:// 블루투스·시리얼, 로고, Otto 터치 인사 배포)
+마지막 갱신: 2026-11-26 (상태 점검: Pages 정상, 로봇 레포 표기 정정)
 
 ## 1. 한눈에 보기
 - **목표:** 첫 화면을 4칸으로 나눠 로봇 4대(SMARS, Otto, 로봇 개, 셀프 밸런싱 바이크)의 생김새와 동작을 애니메이션으로 보여준다. 로봇을 고르면 기존 제어 웹으로 들어가고, "← 처음으로" 버튼이나 무입력 3분(+경고 15초) 뒤 로봇을 멈추고 첫 화면으로 돌아온다.
@@ -27,9 +27,9 @@
 | 로봇 | 폴더 / 레포 | 제어 웹 | 연결 | 허브가 쓰는 정지 방법 | 펌웨어 failsafe |
 | --- | --- | --- | --- | --- | --- |
 | SMARS | `smars_web` / kgh-DaC/lecture-SMARS (public) | `smars_web/twin/smars_console.html` | Web Serial 57600 (USB 또는 HC-05 SPP COM) | `button.dp.stop[data-dir="S"]`에 **pointerdown** (click 안 됨) → `#btnDisconnect` | 600ms |
-| Otto | `ottobot` / kgh-DaC/ottobot (private, 브랜치 `master`) | `ottobot/web/index.html` | BLE `OTTO2` (FFE0, notify FFE1, write FFE2) | `window.otto.link.stop()` 또는 `#btnStop` → `otto.link.disconnect()` | 1.5s |
-| 로봇 개 | `robot_dog` / kgh-DaC/robot-dog (private, `main`) | `robot_dog/esp32-robot-dog-code-master/software/robot_control_web/index.html` (`robot_page.html`은 런처라 안 씀) | localhost에서는 USB 게이트웨이 모드(`api/*`), Wi-Fi 핫스팟 | `#stop` click | 1s 리스, 기울기 20° |
-| 바이크 | `self-balancing-bike_app` / kgh-DaC/self-balancing-bike_app (private) | `self-balancing-bike_app/web/index.html` | BLE(FFE0/FFE1, Nordic UART) / Web Serial 9600 | `#estop` click (토글이라 `.active`면 건너뜀) → `#btnDisconnect` | 500ms |
+| Otto | `ottobot` / kgh-DaC/ottobot (public, 브랜치 `master`) | `ottobot/web/index.html` | BLE `OTTO2` (FFE0, notify FFE1, write FFE2) | `window.otto.link.stop()` 또는 `#btnStop` → `otto.link.disconnect()` | 1.5s |
+| 로봇 개 | `robot_dog` / kgh-DaC/robot-dog (public, `main`) | `robot_dog/esp32-robot-dog-code-master/software/robot_control_web/index.html` (`robot_page.html`은 런처라 안 씀) | localhost에서는 USB 게이트웨이 모드(`api/*`), Wi-Fi 핫스팟 | `#stop` click | 1s 리스, 기울기 20° |
+| 바이크 | `self-balancing-bike_app` / kgh-DaC/self-balancing-bike_app (public) | `self-balancing-bike_app/web/index.html` | BLE(FFE0/FFE1, Nordic UART) / Web Serial 9600 | `#estop` click (토글이라 `.active`면 건너뜀) → `#btnDisconnect` | 500ms |
 
 ## 4. 설계 핵심 (왜 이렇게 했는가)
 - **태블릿(안드로이드 Chrome):** 카드마다 이 기기에서 되는 연결을 기능 감지(`'bluetooth'/'serial' in navigator`)로 표시. 로봇 개는 `localOnly`라 로컬 허브 밖에서는 iframe 대신 로봇 Wi-Fi 페이지(http://192.168.4.1) 안내(`offsite`)를 띄운다(https 허브에서 http 로봇 IP는 혼합 콘텐츠로 막힘). 안드로이드 뒤로 가기는 history 항목으로 잡아 "처음으로"와 같이 안전 정지 후 복귀, 당겨서 새로고침 차단(overscroll-behavior), 전체 화면 버튼.
@@ -81,3 +81,4 @@
 | 2026-11-26 | BAT 없이(index.html 더블클릭, file://) 블루투스·시리얼: iframe 권한 정책 'src'가 불투명 출처(null)와 맞지 않아 막혀 있었음 → file://에서 `allow="bluetooth *; serial *; usb *"`. 로봇 개는 iframe 안이면 연결 카드를 숨겨 `fileOffsite`(새 탭 직접 열기) 추가. 안내 문구·README·hub-shell 스킬 갱신. 헤드리스 Edge로 file://·Pages 모두 4개 iframe serial/bluetooth 허용 확인, check_hub 123/123. 같은 날 Otto 펌웨어(터치 인사) COM10 업로드·부팅·PING 확인 |
 | 2026-11-26 | 첫 화면 왼쪽 위에 학교 로고(`hub/img/logo.png`, ball_and_beam 교재 웹과 같은 파일) + 'Dept. Mechanical System', '로봇을 선택하세요' 문구 삭제. 폭 1000px 이하에서는 로고 줄이 제목 위로. check_hub 124/124, 1600×900·800×1280 캡처 확인. Otto 터치 인사는 사용자 요청으로 '기쁨 제스처 → HELLO → 원위치'로 되돌려 재업로드 |
 | 2026-11-26 | push: ottobot `ece9b4a`(터치 인사·핀 카드·그동안 커밋 안 된 BLE/펌웨어 작업 포함), robot-hub `8e93517`. Pages 첫 배포는 GitHub 일시 오류(deploy 단계)로 실패 → 수동 실행으로 성공, 로고·hub.js·ottobot 번들 200 확인. robot_dog 미커밋 작업은 건드리지 않음 |
+| 2026-11-26 | 상태 점검: Pages 예약 배포 성공·주요 파일 200, 로봇 레포 4개 모두 public 확인 → 3절 표의 private 표기 정정. 남은 일은 실물·실기기 시험(사람)과 로봇 레포 dispatch(로봇 하네스) |
