@@ -227,7 +227,7 @@ window.ROBOTS = [
     // stop.evidence: remote.ino 500ms 무수신 시 중립. 페이지도 hidden/pagehide 시 중립 전송(index.html:971-981)
     failsafe: '500ms 무수신 시 중립',
     // 기본 펌웨어: 03.Firmware/self_balancing_bike. ServoTimer2 는 저장소 안 _workspace/lib 를 --libraries 로 쓴다.
-    // 보드 종류 미확인: Nano 가정(arduino:avr:nano = 신형 부트로더 115200). 동기화가 안 되면 57600(구형 부트로더)으로 다시 시도한다.
+    // 보드: Arduino Nano(2026-11-26 사용자 확인). 부트로더 신형·구형은 미확인 → 115200(신형) 먼저, 동기화가 안 되면 57600(구형)으로 다시 시도한다.
     firmware: {
       sketch: 'self-balancing-bike_app/03.Firmware/self_balancing_bike',
       fqbn: 'arduino:avr:nano',
@@ -238,7 +238,7 @@ window.ROBOTS = [
       bauds: [115200, 57600],
       signature: '1e950f',
       board: 'Arduino Nano 호환 (ATmega328P)',
-      boardNote: '보드 종류를 아직 확인하지 못했습니다(Nano 가정).',
+      boardNote: 'Arduino Nano. 부트로더(신형·구형)는 자동으로 맞춰 시도합니다.',
       // HC-05 가 D0/D1(하드웨어 Serial)을 USB 와 같이 쓴다(self_balancing_bike.ino:79 Serial.begin(9600) HC-05 data-mode) → 업로드 응답이 섞일 수 있다
       portHint: 'HC-05 블루투스 모듈이 D0/D1(하드웨어 Serial)에 물려 있어 업로드가 실패하면 블루투스 모듈을 빼고 다시 시도하세요.'
     },
