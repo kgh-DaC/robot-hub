@@ -66,9 +66,19 @@ button { font: inherit; }
   padding: var(--gap);
   gap: var(--gap);
 }
-.intro-head { text-align: center; }
-.intro-head h1 { margin: 0; font-size: clamp(22px, 2.6vw, 34px); font-weight: 800; letter-spacing: -0.01em; }
-.lead { margin: 4px 0 0; font-size: clamp(15px, 1.5vw, 20px); color: var(--muted); }
+.intro-head { position: relative; text-align: center; }
+.intro-head h1 { margin: 0; min-height: 56px; display: flex; align-items: center; justify-content: center;
+  font-size: clamp(22px, 2.6vw, 34px); font-weight: 800; letter-spacing: -0.01em; }
+/* 왼쪽 위 학교 로고 + 학과명 (ball_and_beam 교재 웹과 같은 구성) */
+.org { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; }
+.org img { height: 56px; width: auto; flex: none; }
+.org-dept { font-size: clamp(14px, 1.2vw, 18px); font-weight: 600; letter-spacing: .04em; color: var(--text); white-space: nowrap; }
+/* 제목과 겹칠 만큼 좁으면 로고를 제목 위 한 줄로 */
+@media (max-width: 1000px) {
+  .org { position: static; justify-content: flex-start; margin-bottom: 6px; }
+  .org img { height: 44px; }
+  .intro-head h1 { min-height: 0; }
+}
 .notices { display: flex; flex-direction: column; gap: 6px; margin: 10px auto 0; max-width: 900px; }
 .notice { margin: 0; padding: 8px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; }
 .notice.warn { background: var(--warn-bg); color: var(--warn-text); }

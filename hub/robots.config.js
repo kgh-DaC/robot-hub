@@ -103,6 +103,20 @@ window.ROBOTS = [
       label: '로봇 페이지 열기',
       note: '이 방식에서는 허브의 무입력 복귀·자동 정지가 적용되지 않습니다. 다 쓰면 로봇 페이지에서 정지를 누르세요.'
     },
+    // 파일로 연 허브(file://): 이 페이지는 file:// 에서 Web Serial 직접 연결을 지원하지만(index.html:333-337),
+    // iframe 안이면 자기 Wi-Fi 프레임 안이라고 보고 연결 카드를 숨긴다(index.html:340, 879) → 새 탭에서 직접 연다.
+    fileOffsite: {
+      title: '로봇 개는 새 탭에서 직접 연결합니다',
+      text: '파일로 연 허브에서는 로봇 개 제어 페이지를 새 탭에서 엽니다. 그 페이지의 연결 방식에서 "USB 직렬 (브라우저)"(Web Serial) 또는 "Wi-Fi"를 고르세요.',
+      steps: [
+        '로봇 개를 USB 케이블로 연결하거나 전원을 켭니다.',
+        '아래 "제어 페이지 열기"를 누릅니다(새 탭).',
+        '연결 방식에서 "USB 직렬 (브라우저)"를 누르고 포트를 고릅니다. Wi-Fi는 로봇 Wi-Fi(RobotDog-…)에 먼저 연결합니다.'
+      ],
+      url: 'robot_dog/esp32-robot-dog-code-master/software/robot_control_web/index.html',
+      label: '제어 페이지 열기',
+      note: '새 탭에서는 허브의 무입력 복귀·자동 정지가 적용되지 않습니다. 다 쓰면 그 페이지에서 정지를 누르고 탭을 닫으세요(펌웨어 1초 리스로도 멈춤).'
+    },
     stop: {
       steps: [
         // stop.page_hook_selector: #stop click → stop() → POST api/command cmd=STOP (index.html:150, 1580, 789-794)

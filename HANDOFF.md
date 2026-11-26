@@ -35,7 +35,7 @@
 - **태블릿(안드로이드 Chrome):** 카드마다 이 기기에서 되는 연결을 기능 감지(`'bluetooth'/'serial' in navigator`)로 표시. 로봇 개는 `localOnly`라 로컬 허브 밖에서는 iframe 대신 로봇 Wi-Fi 페이지(http://192.168.4.1) 안내(`offsite`)를 띄운다(https 허브에서 http 로봇 IP는 혼합 콘텐츠로 막힘). 안드로이드 뒤로 가기는 history 항목으로 잡아 "처음으로"와 같이 안전 정지 후 복귀, 당겨서 새로고침 차단(overscroll-behavior), 전체 화면 버튼.
 - **SMARS는 태블릿 불가:** HC-05는 클래식 블루투스(SPP)라 Web Bluetooth(BLE 전용)로 못 붙는다. 태블릿에서 쓰려면 BLE 모듈(HM-10 등) 교체 + SMARS 펌웨어·제어 웹에 BLE 추가가 필요(SMARS 하네스 작업).
 - **로봇 폴더는 수정하지 않는다.** 각 폴더에 자기 하네스와 규칙이 있다(예: `smars_web/twin/` 수정 금지). 허브는 제어 웹을 iframe으로 그대로 띄운다.
-- **로컬 서버(같은 출처)로 연다.** 그래야 허브가 iframe 안의 입력을 감지하고 정지 버튼을 대신 누를 수 있다. file://로 열면 "확인 모드"(5분마다 계속 사용 여부를 묻기)로 바뀌고, 복귀할 때 iframe 제거(연결 끊김)만 가능하다.
+- **로컬 서버(같은 출처)로 연다.** 그래야 허브가 iframe 안의 입력을 감지하고 정지 버튼을 대신 누를 수 있다. file://로 열면 "확인 모드"(5분마다 계속 사용 여부를 묻기)로 바뀌고, 복귀할 때 iframe 제거(연결 끊김)만 가능하다. 블루투스·시리얼 연결 자체는 file://에서도 된다(iframe `allow`를 `*`로 위임, 로봇 개는 새 탭).
 - **로봇 개 API 프록시:** 로봇 개 페이지는 localhost에서 열리면 같은 출처 `api/`를 부른다. `hub/serve.py`가 이 요청을 USB 게이트웨이 `http://127.0.0.1:8787`로 넘긴다(환경변수 `ROBOTDOG_GATEWAY`로 변경). 게이트웨이(`usb_gateway.py`)를 먼저 켜야 USB 모드가 된다. localhost에서는 Web Serial 직접 연결 버튼이 숨겨진다.
 - **복귀 순서:** 정지 명령 → (해제) → iframe 제거 → 첫 화면. 정지 방법은 `hub/robots.config.js`의 `stop.steps`에만 둔다.
 - **애니메이션은 실제 구현된 동작만** 보여준다(인벤토리 근거 필수).
@@ -76,3 +76,7 @@
 | 2026-11-26 | QA 3회차(결함 #6·#9 수정, #10 터치 관통 수정·재검증), robot-hub public 게시·서브모듈 4개, 로봇 레포 3개 public 전환, Pages(Actions)+서브모듈 자동 최신화 워크플로 추가 — 첫 배포는 GitHub 장애로 실패 |
 | 2026-11-26 | Pages 배포 실패 원인: GitHub 장애 + 구버전 액션(deploy-pages@v4·upload-pages-artifact@v3에서 artifact 조회 실패). configure-pages@v6·upload-pages-artifact@v5·deploy-pages@v5로 올려 배포 성공. README 추가 |
 | 2026-11-26 | 갤럭시 탭 대응(카드별 연결 가능 표시, 로봇 개 offsite 안내, 뒤로 가기=안전 복귀, 새로고침 방지, 전체 화면, 세로 2x2). 태블릿 에뮬레이션으로 로컬·Pages 검증 |
+| 2026-11-26 | (ottobot 폴더 작업) Otto 제어 웹 하단에 핀 연결 카드 추가(`ottobot/web/js/ui-pins.js`). ottobot에서 커밋·push해야 Pages에 반영 |
+| 2026-11-26 | (ottobot 폴더 작업) 멈춰 있을 때 터치 → 기쁨 제스처 + HELLO(펌웨어·웹·데모). 펌웨어 업로드 대기, 허브 첫 화면 애니메이션은 그대로 |
+| 2026-11-26 | BAT 없이(index.html 더블클릭, file://) 블루투스·시리얼: iframe 권한 정책 'src'가 불투명 출처(null)와 맞지 않아 막혀 있었음 → file://에서 `allow="bluetooth *; serial *; usb *"`. 로봇 개는 iframe 안이면 연결 카드를 숨겨 `fileOffsite`(새 탭 직접 열기) 추가. 안내 문구·README·hub-shell 스킬 갱신. 헤드리스 Edge로 file://·Pages 모두 4개 iframe serial/bluetooth 허용 확인, check_hub 123/123. 같은 날 Otto 펌웨어(터치 인사) COM10 업로드·부팅·PING 확인 |
+| 2026-11-26 | 첫 화면 왼쪽 위에 학교 로고(`hub/img/logo.png`, ball_and_beam 교재 웹과 같은 파일) + 'Dept. Mechanical System', '로봇을 선택하세요' 문구 삭제. 폭 1000px 이하에서는 로고 줄이 제목 위로. check_hub 124/124, 1600×900·800×1280 캡처 확인. Otto 터치 인사는 사용자 요청으로 '기쁨 제스처 → HELLO → 원위치'로 되돌려 재업로드 |

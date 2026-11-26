@@ -142,7 +142,7 @@
   function showEnvNotices() {
     var msgs = [];
     if (isFileUrl) {
-      msgs.push({ kind: 'bad', text: '파일로 직접 열었습니다. 로봇 정지·자동 복귀가 제대로 동작하려면 start_hub.bat으로 여세요.' });
+      msgs.push({ kind: 'warn', text: '파일로 직접 열었습니다. 블루투스·USB 연결은 그대로 됩니다. 다만 허브가 로봇 페이지 안을 볼 수 없어 나갈 때 정지 버튼 대신 화면을 닫아(연결 끊기) 멈추고, 5분마다 계속 사용 여부를 묻습니다. 완전한 자동 정지는 start_hub.bat이나 온라인 허브로 여세요.' });
     } else if (!window.isSecureContext) {
       msgs.push({ kind: 'bad', text: '보안 연결이 아니라 블루투스·USB를 쓸 수 없습니다. 온라인 허브(https)나 이 컴퓨터의 start_hub.bat(http://localhost:8800/)으로 여세요.' });
     }
@@ -207,6 +207,7 @@
   function cardEnv(robot) {
     if (robot.localOnly) {
       if (isLocalHub) return { kind: '', text: '' };
+      if (isFileUrl && robot.fileOffsite) return { kind: 'info', text: '새 탭에서 직접 연결 · 눌러서 열기', offsite: true };
       return { kind: 'warn', text: robot.offsite ? '이 화면에서는 연결 불가 · 눌러서 연결 방법 보기' : '이 컴퓨터의 start_hub.bat에서만 연결됩니다', offsite: !!robot.offsite };
     }
     var conns = robot.connection || [];
@@ -219,8 +220,8 @@
 
   // localOnly 로봇을 로컬 허브 밖(온라인·태블릿)에서 골랐을 때의 안내
   function showOffsite(robot) {
-    if (state !== 'intro' || !robot.offsite) return;
-    var o = robot.offsite;
+    var o = (isFileUrl && robot.fileOffsite) || robot.offsite;
+    if (state !== 'intro' || !o) return;
     el.offsiteTitle.textContent = o.title || robot.name;
     el.offsiteText.textContent = o.text || '';
     el.offsiteSteps.textContent = '';
@@ -387,7 +388,9 @@
     frame = document.createElement('iframe');
     frame.className = 'robot-frame';
     frame.title = robot.name + ' 제어 화면';
-    frame.setAttribute('allow', 'bluetooth; serial; usb');
+    // 권한 정책: 기본 허용 대상('src')은 iframe 의 출처다. 파일로 연 허브(file://)는 출처가 불투명(null)이라
+    // 'src' 가 맞지 않아 iframe 안에서 Web Serial·Web Bluetooth 가 막힌다(2026-11-26 실측) → file:// 에서는 * 로 위임.
+    frame.setAttribute('allow', isFileUrl ? 'bluetooth *; serial *; usb *' : 'bluetooth; serial; usb');
     frame.addEventListener('load', onFrameLoad);
     frame.src = robot.page;
     el.frameHost.appendChild(frame);

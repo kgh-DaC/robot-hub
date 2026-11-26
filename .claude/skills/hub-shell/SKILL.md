@@ -21,7 +21,7 @@ start_hub.bat           # 로컬 서버 실행 후 브라우저 열기
 
 `start_hub.bat`: `hub/serve.py`(표준 라이브러리만 사용, `127.0.0.1:8800`)를 `python`(없으면 `py`)으로 실행하고 `start http://localhost:8800/` 한다. serve.py는 정적 파일 서버이면서, 로봇 개 제어 웹이 쓰는 상대 경로 API(`/robot_dog/.../robot_control_web/api/*`)를 USB 게이트웨이(`http://127.0.0.1:8787/api/*`, 환경변수 `ROBOTDOG_GATEWAY`로 변경)로 넘기는 프록시다. 로봇 개 페이지는 localhost에서 열리면 게이트웨이 모드로 바뀌어 같은 출처의 `api/`를 부르기 때문이다. 게이트웨이가 꺼져 있으면 502와 JSON 오류를 돌려준다. 프록시 경로 접두사는 하드코딩하지 말고 serve.py 상단 표(`PROXIES`)에 둔다. Chrome/Edge가 아니면 Web Bluetooth가 없다는 안내를 허브 화면에 띄운다.
 
-**대체 모드**: 같은 출처 접근에 실패하면(file:// 등) `hub.js`가 자동으로 "확인 모드"로 바뀐다. 무입력 감지 대신 N분마다 "계속 사용하시나요?" 오버레이를 띄우고, 응답이 없으면 복귀한다. 안전 정지는 iframe 제거(연결 해제)만 가능하다고 화면에 표시한다.
+**대체 모드**: 같은 출처 접근에 실패하면(file:// 등) `hub.js`가 자동으로 "확인 모드"로 바뀐다. 무입력 감지 대신 N분마다 "계속 사용하시나요?" 오버레이를 띄우고, 응답이 없으면 복귀한다. 안전 정지는 iframe 제거(연결 해제)만 가능하다고 화면에 표시한다. 블루투스·USB 연결 자체는 file://에서도 된다(위 allow 규칙). iframe 안에서 연결 UI를 숨기는 로봇(로봇 개: 프레임 안이면 연결 카드 숨김)은 `fileOffsite`로 새 탭에서 직접 연다.
 
 ## robots.config.js 규격
 ```js
@@ -62,7 +62,7 @@ window.RobotHub.register({
 ## 화면 상태
 `intro`(4분할) → `control`(선택 로봇) → `intro`.
 - **intro**: 2×2 그리드(세로 화면·좁은 폭은 1열). 구획마다 로봇 이름, 한 줄 설명, 연결 방식 배지, 애니메이션 무대, 현재 동작 자막, 동작 목록 점(진행 표시). 구획 전체가 버튼(`role="button"`, Enter/Space, 터치)이다.
-- **control**: 상단 고정 바(로봇 이름, "← 처음으로" 버튼, 무입력 남은 시간 표시) + 그 아래 전체 iframe. `allow="bluetooth; serial; usb"`. iframe은 진입 시 생성하고 복귀 시 제거한다(연결이 남지 않게).
+- **control**: 상단 고정 바(로봇 이름, "← 처음으로" 버튼, 무입력 남은 시간 표시) + 그 아래 전체 iframe. `allow="bluetooth; serial; usb"`, **file://에서는 `bluetooth *; serial *; usb *`**(file:// 문서는 출처가 불투명(null)이라 기본 대상 'src'가 맞지 않아 iframe 안 Web Serial·Bluetooth가 막힌다, 2026-11-26 실측). iframe은 진입 시 생성하고 복귀 시 제거한다(연결이 남지 않게).
 
 ## 무입력 자동 복귀
 1. 같은 출처면 iframe `load` 후 `contentWindow`에 `pointerdown, keydown, wheel, touchstart, input`을 캡처 단계로 등록하고, 허브 문서에도 같은 이벤트를 등록한다. 입력마다 타이머를 리셋한다. `pointermove`는 리셋하지 않는다(진동·마우스 흔들림으로 영원히 안 끝나는 것을 막는다).
