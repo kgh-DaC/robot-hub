@@ -4,7 +4,7 @@
 
 | 로봇 | 설명 | 연결 | 제어 웹 | 레포 |
 | --- | --- | --- | --- | --- |
-| SMARS | 두 궤도로 달리는 소형 탱크 로봇 | Web Bluetooth (BLE, 기본), Web Serial (USB, HC-05 블루투스 COM) | `smars_web/twin/smars_console.html` | [lecture-SMARS](https://github.com/kgh-DaC/lecture-SMARS) |
+| SMARS | 두 궤도로 달리는 소형 탱크 로봇 | Web Bluetooth (BLE, 기본), Web Serial (USB) | `smars_web/twin/smars_console.html` | [lecture-SMARS](https://github.com/kgh-DaC/lecture-SMARS) |
 | 오토봇 (Otto) | 두 다리로 걷고 춤추는 Otto 로봇 | Web Bluetooth (BLE) | `ottobot/web/index.html` | [ottobot](https://github.com/kgh-DaC/ottobot) |
 | 로봇 개 | 네 다리 12관절로 걷는 사족 로봇 | USB 게이트웨이 / Wi-Fi 핫스팟 | `robot_dog/esp32-robot-dog-code-master/software/robot_control_web/index.html` | [robot-dog](https://github.com/kgh-DaC/robot-dog) |
 | 셀프 밸런싱 바이크 | 반동 휠로 스스로 서는 두 바퀴 로봇 | Web Bluetooth / Web Serial | `self-balancing-bike_app/web/index.html` | [self-balancing-bike_app](https://github.com/kgh-DaC/self-balancing-bike_app) |

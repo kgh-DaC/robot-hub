@@ -28,7 +28,7 @@
 ## 3. 로봇별 정보 (자세한 근거는 `_workspace/01_inventory_*.json`)
 | 로봇 | 폴더 / 레포 | 제어 웹 | 연결 | 허브가 쓰는 정지 방법 | 펌웨어 failsafe |
 | --- | --- | --- | --- | --- | --- |
-| SMARS | `smars_web` / kgh-DaC/lecture-SMARS (public) | `smars_web/twin/smars_console.html` | **BLE 기본**(Web Bluetooth, HM-10 계열 FFE0/FFF0/Nordic) / Web Serial 57600 (USB 또는 HC-05 SPP COM) | `button.dp.stop[data-dir="S"]`에 **pointerdown** (click 안 됨) → `#btnDisconnect` | 600ms |
+| SMARS | `smars_web` / kgh-DaC/lecture-SMARS (public) | `smars_web/twin/smars_console.html` | **BLE 기본**(Web Bluetooth, HM-10 계열 FFE0/FFF0/Nordic) / Web Serial 57600 (USB). 블루투스 COM(HC-05)은 2026-11-26 삭제 | `button.dp.stop[data-dir="S"]`에 **pointerdown** (click 안 됨) → `#btnDisconnect` | 600ms |
 | Otto | `ottobot` / kgh-DaC/ottobot (public, 브랜치 `master`) | `ottobot/web/index.html` | BLE `OTTO2` (FFE0, notify FFE1, write FFE2) | `window.otto.link.stop()` 또는 `#btnStop` → `otto.link.disconnect()` | 1.5s |
 | 로봇 개 | `robot_dog` / kgh-DaC/robot-dog (public, `main`) | `robot_dog/esp32-robot-dog-code-master/software/robot_control_web/index.html` (`robot_page.html`은 런처라 안 씀) | localhost에서는 USB 게이트웨이 모드(`api/*`), Wi-Fi 핫스팟 | `#stop` click | 1s 리스, 기울기 20° |
 | 바이크 | `self-balancing-bike_app` / kgh-DaC/self-balancing-bike_app (public) | `self-balancing-bike_app/web/index.html` | BLE(FFE0/FFE1, Nordic UART) / Web Serial 9600 | `#estop` click (토글이라 `.active`면 건너뜀) → `#btnDisconnect` | 500ms |
@@ -93,3 +93,4 @@ obot-hub-fwbuild |
 | 2026-11-26 | 바이크 핀 카드 정정: 제작 PCB 레포 `kgh-DaC/self-balancing-bike_pcb`(private) 기준. FlyWheel 1 VIN(나노 쪽) … 8 B로 원본 SCH와 반대, 엔코더 A=D3·B=D2, U2 TPS563201 3A, 역접속 보호 없음. 이전 카드의 FlyWheel 번호·엔코더 A/B는 틀렸었음 |
 | 2026-11-26 | 바이크 핀 카드: 나노 그림 옆에 제작 PCB 윗면 그림(실척, 커넥터 핀 번호·신호) 추가 |
 | 2026-11-26 | 바이크 핀 카드: 별도 나노 그림 삭제(사용자 요청), PCB 윗면 그림 하나로 표시 |
+| 2026-11-26 | SMARS 콘솔 '블루투스 COM (HC-05)' 연결 방식 삭제(smars_web, 사용자 요청). 허브 config 주석·README 맞춤 |

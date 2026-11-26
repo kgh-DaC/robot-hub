@@ -41,7 +41,7 @@ window.ROBOTS = [
     pagesUrl: null,
     // 연결 방식(2026-11-26 SMARS 콘솔에 BLE 추가, smars_console.html:10, 336, 767-815):
     //   블루투스 BLE(기본, Web Bluetooth, HM-10/HC-08/AT-09 계열 FFE0 → FFF0 → Nordic UART) → 태블릿에서도 연결 가능
-    //   USB 시리얼 57600 / 블루투스 COM(HC-05, 같은 Web Serial 경로) / 시뮬레이션
+    //   USB 시리얼 57600 / 시뮬레이션 (블루투스 COM(HC-05) 방식은 2026-11-26 삭제)
     connection: ['ble', 'serial'],
     stop: {
       steps: [
