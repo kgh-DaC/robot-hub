@@ -14,6 +14,11 @@ on:
   schedule:
     - cron: "17 * * * *"      # 매시 17분
   workflow_dispatch:
+    inputs:
+      force_firmware:
+        description: "소스가 같아도 펌웨어를 모두 다시 빌드"
+        type: boolean
+        default: false
   repository_dispatch:
     types: [robot-updated]
 
@@ -54,7 +59,7 @@ jobs:
       - name: 펌웨어 빌드
         id: fw
         continue-on-error: true
-        run: node tools/build_firmware.mjs --install
+        run: node tools/build_firmware.mjs --install ${{ inputs.force_firmware && '--force' || '' }}
       - name: 바뀐 포인터·펌웨어 커밋
         run: |
           if [ -z "$(git status --porcelain)" ]; then
