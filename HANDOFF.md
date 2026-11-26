@@ -96,3 +96,4 @@ obot-hub-fwbuild |
 | 2026-11-26 | SMARS 콘솔 '블루투스 COM (HC-05)' 연결 방식 삭제(smars_web, 사용자 요청). 허브 config 주석·README 맞춤 |
 | 2026-11-26 | 3D 형상 추가: Otto(ottobot `f56c9fa`, ui-twin.js — 보낸 명령으로 다리 진동자 근사·팔·LED, 텔레메트리로 기울기·거리·터치·넘어짐) + 카드 블록(메이슨리) 배치(layout.js). 바이크(`3b28e28`, web/twin.js — 보낸 조향·속도로 바퀴·이동 근사, 연결·캘리브레이션으로 플라이휠·표시등). 둘 다 SMARS와 같은 three.js 로컬 묶음(web/vendor). 헤드리스 시험 콘솔 오류 0. 실물 대조(Otto 팔 드는 방향) 필요 |
 | 2026-11-26 | SMARS 콘솔 제목 → 학습 페이지(lecture-SMARS lesson.html) 새 탭 링크(smars_web) |
+| 2026-11-27 | 바이크 3D 창 축소, 조이스틱을 3D 오른쪽에(설정 카드는 넓은 화면에서 그 오른쪽, 좁으면 아래) |
