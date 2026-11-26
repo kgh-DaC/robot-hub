@@ -90,3 +90,4 @@ obot-hub-fwbuild |
 | 2026-11-26 | SMARS 제어 웹에 블루투스 BLE(기본) 추가(smars_web 폴더, 사용자 승인으로 twin/ 1회 예외), 허브 smars connection ['ble','serial']. 첫 화면 전체 화면 버튼을 첫 줄 오른쪽으로 |
 | 2026-11-26 | CI 펌웨어 빌드 실측: 수동 실행 옵션 `force_firmware` 추가 → Actions에서 4대 모두 빌드 성공(smars 10,930B, ottobot 30,558/30,720B, robotdog 1,142,559B, bike 10,762B), 봇 커밋 584fe8b, Pages 배포 성공. 이후 로봇 소스(스케치 폴더) 커밋이 바뀔 때만 자동 재빌드 |
 | 2026-11-26 | 바이크 보드 Nano 확인(사용자). 바이크 제어 웹 하단에 핀 연결 카드 추가(self-balancing-bike_app `ff879cb`, PCB 회로도 `Downloads/새 폴더/open source balance bike/04.SCH/SCH.pdf` 기준). 확인된 펌웨어↔PCB 차이: 배터리 분배 전압은 PCB A0인데 원본 코드는 A7(현 펌웨어는 미사용), D10은 PCB에서 360° 뒷바퀴 서보, D5(DIRM) 커넥터 없음 |
+| 2026-11-26 | 바이크 핀 카드 정정: 제작 PCB 레포 `kgh-DaC/self-balancing-bike_pcb`(private) 기준. FlyWheel 1 VIN(나노 쪽) … 8 B로 원본 SCH와 반대, 엔코더 A=D3·B=D2, U2 TPS563201 3A, 역접속 보호 없음. 이전 카드의 FlyWheel 번호·엔코더 A/B는 틀렸었음 |
