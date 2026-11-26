@@ -133,6 +133,9 @@ window.ROBOTS = [
     // 같은 출처 api/ 가 없어 연결할 수 없고, 로봇 IP(http)는 https 허브 안에서 혼합 콘텐츠로 막힌다.
     // → localOnly: 로컬 허브가 아니면 iframe 대신 offsite 안내(로봇이 직접 내주는 페이지, inventory hosting.modes.robot_served)를 띄운다.
     localOnly: true,
+    // 온라인 허브(https, GitHub Pages)에서는 iframe 으로 연다(2026-11-27): 제어 페이지가 https 사본을 "이 컴퓨터의 페이지"로 보고
+    // 연결 방법에 USB 직렬(브라우저, Web Serial)·Wi-Fi(로봇 페이지 새 탭)·시뮬레이터를 보여 준다. offsite 안내는 http(태블릿 등 다른 경로)용으로 남긴다.
+    hostedOk: true,
     offsite: {
       title: '로봇 개는 로봇 Wi-Fi로 연결합니다',
       text: '이 화면(온라인 허브·태블릿)에서는 로봇 개에 연결할 수 없습니다. 로봇이 직접 내주는 제어 페이지를 여세요.',

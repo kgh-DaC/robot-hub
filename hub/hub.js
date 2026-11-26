@@ -221,7 +221,8 @@
 
   // 이 기기·이 허브에서 로봇을 연결할 수 있는가. 제약이 없으면 text 는 비어 있다(카드에 아무것도 안 붙음).
   function cardEnv(robot) {
-    if (robot.localOnly) {
+    // hostedOk: 온라인(https) 허브에서는 같은 출처 사본을 iframe 으로 띄워도 된다(로봇 개: USB 직렬(브라우저)·시뮬레이터)
+    if (robot.localOnly && !(location.protocol === 'https:' && robot.hostedOk)) {
       if (isLocalHub) return { kind: '', text: '' };
       if (isFileUrl && robot.fileOffsite) return { kind: 'info', text: '새 탭에서 직접 연결 · 눌러서 열기', offsite: true };
       return { kind: 'warn', text: robot.offsite ? '이 화면에서는 연결 불가 · 눌러서 연결 방법 보기' : '이 컴퓨터의 start_hub.bat에서만 연결됩니다', offsite: !!robot.offsite };
