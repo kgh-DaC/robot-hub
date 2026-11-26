@@ -1,0 +1,10 @@
+{
+  "bundle": "esptool.bundle.js",
+  "global": "window.HubEsptool",
+  "esbuild": "0.28.2",
+  "packages": {
+    "esptool-js": "0.7.1",
+    "pako": "2.2.0",
+    "atob-lite": "2.0.0"
+  }
+}

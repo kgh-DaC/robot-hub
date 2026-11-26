@@ -1,0 +1,9 @@
+{
+  "name": "hub-vendor-esptool",
+  "private": true,
+  "description": "esptool-js 를 허브용 단일 classic script(IIFE)로 묶는다. 결과: hub/vendor/esptool.bundle.js",
+  "type": "module",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": { "esptool-js": "0.7.1" },
+  "devDependencies": { "esbuild": "0.28.2" }
+}

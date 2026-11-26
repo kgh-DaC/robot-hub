@@ -2,6 +2,7 @@
  * - window.RobotHub.register(): 애니메이션 모듈 등록 창구(모듈보다 먼저 로드되어야 한다)
  * - intro(2x2 소개) ↔ control(제어 웹 iframe) 상태 전환
  * - 무입력 자동 복귀, 확인 모드(같은 출처 접근 불가 시), 복귀 전 안전 정지
+ * - 펌웨어 업로드(사용자가 버튼을 눌렀을 때만): 안전 정지 → iframe 닫기 → 포트 선택 → 업로드 → iframe 다시 열기
  * 로봇별 값은 robots.config.js(window.ROBOTS)에만 있다. 이 파일은 그 배열을 순회만 한다.
  */
 (function () {
@@ -56,7 +57,7 @@
   }
 
   // ---------------------------------------------------------------- 상태
-  var state = 'intro';            // intro | control | exiting
+  var state = 'intro';            // intro | control | exiting | stopwarn | firmware
   var current = null;             // 선택 로봇 설정
   var frame = null;               // iframe
   var sameOrigin = false;         // iframe 문서 접근 가능 여부
@@ -98,6 +99,19 @@
     el.offsiteLink = $('offsiteLink');
     el.btnOffsiteClose = $('btnOffsiteClose');
     el.notices = $('notices');
+    el.btnFw = $('btnFw');
+    el.btnOffsiteFw = $('btnOffsiteFw');
+    el.fw = $('fw');
+    el.fwTitle = $('fwTitle');
+    el.fwInfo = $('fwInfo');
+    el.fwWarn = $('fwWarn');
+    el.fwNotes = $('fwNotes');
+    el.fwProgress = $('fwProgress');
+    el.fwStage = $('fwStage');
+    el.fwBar = $('fwBar');
+    el.fwResult = $('fwResult');
+    el.fwCancel = $('fwCancel');
+    el.fwGo = $('fwGo');
 
     showEnvNotices();
     buildCards();
@@ -119,12 +133,14 @@
     el.offsite.addEventListener('click', function (e) { if (e.target === el.offsite) hideOffsite(); });
     setupFullscreen();
     setupHistory();
+    setupFirmware();
 
     // 허브 문서의 입력. iframe 안 입력은 iframe 창에서 따로 받는다.
     ACTIVITY_EVENTS.forEach(function (t) { document.addEventListener(t, markInput, { capture: true, passive: true }); });
     // Esc = 나가기. 허브 문서에 포커스가 있을 때만 온다. iframe 안의 Esc 는 로봇 페이지 몫(로봇 개·바이크는 Esc=정지)이라 가로채지 않는다.
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && state === 'control') { e.preventDefault(); exitToIntro('esc'); }
+      if (e.key === 'Escape' && state === 'firmware') { e.preventDefault(); fwCancel(); }
+      else if (e.key === 'Escape' && state === 'control') { e.preventDefault(); exitToIntro('esc'); }
       else if (e.key === 'Escape' && !el.offsite.hidden) { e.preventDefault(); hideOffsite(); }
     });
 
@@ -231,6 +247,9 @@
     el.offsiteNote.hidden = !o.note;
     el.offsiteLink.hidden = !o.url;
     if (o.url) { el.offsiteLink.href = o.url; el.offsiteLink.textContent = o.label || '열기'; }
+    // 펌웨어 업로드는 허브 최상위에서 하므로 iframe 없이 여는 로봇도 여기서 할 수 있다
+    el.btnOffsiteFw.hidden = !fwEntry(robot);
+    el.btnOffsiteFw.onclick = function () { openFirmware(robot, 'intro'); };
     el.offsite.hidden = false;
     el.btnOffsiteClose.focus();
   }
@@ -264,11 +283,12 @@
       if (popIgnore) { popIgnore = false; return; }
       if (state === 'control') { exitToIntro('back'); return; }
       if (state === 'exiting' || state === 'stopwarn') { pushControlHistory(); return; }
+      if (state === 'firmware') { if (fw.origin === 'control') pushControlHistory(); fwCancel(); return; }
       if (!el.offsite.hidden) hideOffsite();
     });
     // 제어 중 새로고침·탭 닫기: 브라우저가 허락하면 확인을 묻는다(정지 절차를 거치지 않으므로)
     window.addEventListener('beforeunload', function (e) {
-      if (state === 'control' || state === 'exiting' || state === 'stopwarn') { e.preventDefault(); e.returnValue = ''; }
+      if (state === 'control' || state === 'exiting' || state === 'stopwarn' || (state === 'firmware' && (fw.origin === 'control' || fw.busy))) { e.preventDefault(); e.returnValue = ''; }
     });
   }
   function pushControlHistory() {
@@ -384,7 +404,22 @@
     el.intro.hidden = true;
     el.control.hidden = false;
     document.title = robot.name + ' - 로봇 통합 제어 허브';
+    updateFwButton(robot);
 
+    createFrame(robot);
+
+    lastInput = Date.now();
+    confirmStart = Date.now();
+    warnStart = 0;
+    hideOverlay();
+    startTicker();
+    // 카드에서 Space 로 들어오면 keyup 이 포커스 받은 버튼을 눌러 바로 나가 버리므로 포커스를 옮기지 않는다
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  function createFrame(robot) {
+    sameOrigin = false;
+    boundWin = null;
     frame = document.createElement('iframe');
     frame.className = 'robot-frame';
     frame.title = robot.name + ' 제어 화면';
@@ -394,14 +429,6 @@
     frame.addEventListener('load', onFrameLoad);
     frame.src = robot.page;
     el.frameHost.appendChild(frame);
-
-    lastInput = Date.now();
-    confirmStart = Date.now();
-    warnStart = 0;
-    hideOverlay();
-    startTicker();
-    // 카드에서 Space 로 들어오면 keyup 이 포커스 받은 버튼을 눌러 바로 나가 버리므로 포커스를 옮기지 않는다
-    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   }
 
   function onFrameLoad() {
@@ -431,8 +458,12 @@
   }
 
   // ---------------------------------------------------------------- 무입력 타이머
+  // 펌웨어 대화상자(제어 화면에서 연 것)도 쓰기 중(busy)이 아니면 무입력 타이머가 돈다(QA 결함 #11).
+  // 대화상자는 모달이라 그동안의 입력은 모두 허브 문서로 온다 → lastInput/idleMs 기준.
+  function fwIdleActive() { return state === 'firmware' && fw.origin === 'control' && !fw.busy; }
+
   function markInput(e) {
-    if (state !== 'control') return;
+    if (state !== 'control' && !fwIdleActive()) return;
     // 결함 #10: 경고 오버레이 위에서 누르기 시작한 입력은 손을 뗄 때(click/touchend)까지 미룬다
     if (warnStart && e && (e.type === 'pointerdown' || e.type === 'touchstart') &&
         e.target && e.target.nodeType === 1 && el.overlay.contains(e.target)) return;
@@ -461,15 +492,22 @@
   function stopTicker() { if (ticker) { clearInterval(ticker); ticker = null; } }
 
   function tick() {
-    if (state !== 'control') return;
     var now = Date.now();
-    var base = sameOrigin ? lastInput : confirmStart;
-    var period = sameOrigin ? CFG.idleMs : CFG.confirmEveryMs;
+    if (state === 'firmware' && fw.origin === 'control' && fw.busy) {
+      // 쓰기(포트 선택·리셋~검증) 중에만 멈춘다. 끝나면 그때부터 다시 잰다.
+      lastInput = now; confirmStart = now; warnStart = 0;
+      el.idleLeft.textContent = '펌웨어 쓰는 중';
+      return;
+    }
+    if (state !== 'control' && !fwIdleActive()) return;
+    var idleMode = sameOrigin || state === 'firmware';
+    var base = idleMode ? lastInput : confirmStart;
+    var period = idleMode ? CFG.idleMs : CFG.confirmEveryMs;
     var left = period - (now - base);
 
     if (!warnStart && left <= 0) {
       warnStart = now;
-      showOverlay(sameOrigin);
+      showOverlay(idleMode);
     }
     if (warnStart) {
       var wl = CFG.warnMs - (now - warnStart);
@@ -477,7 +515,7 @@
       el.idleLeft.textContent = '곧 처음 화면으로';
       if (wl <= 0) { exitToIntro('idle'); return; }
     } else {
-      el.idleLeft.textContent = (sameOrigin ? '입력 없으면 ' : '확인까지 ') + fmt(left) + ' 후 처음 화면';
+      el.idleLeft.textContent = (idleMode ? '입력 없으면 ' : '확인까지 ') + fmt(left) + ' 후 처음 화면';
     }
   }
 
@@ -493,18 +531,36 @@
     el.overlayTitle.textContent = idleKind ? '한동안 입력이 없었습니다' : '계속 사용하시나요?';
     el.overlayText.textContent = sec + '초 후 로봇을 멈추고 처음 화면으로 돌아갑니다.';
     el.overlayCount.textContent = sec + '초';
+    el.overlay.classList.toggle('over-fw', state === 'firmware');   // 펌웨어 대화상자 위에 보이게
     el.overlay.hidden = false;
     el.btnContinue.focus();
   }
   function hideOverlay() {
     el.overlay.hidden = true;
-    if (state === 'control' && document.activeElement === el.btnContinue) el.btnHome.focus();
+    if (document.activeElement === el.btnContinue) {
+      if (state === 'control') el.btnHome.focus();
+      else if (state === 'firmware') (el.fwGo.hidden || el.fwGo.disabled ? el.fwCancel : el.fwGo).focus();
+    }
   }
 
   // ---------------------------------------------------------------- 안전 복귀
   var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
 
   function exitToIntro(reason) {
+    // 펌웨어 대화상자(쓰기 중 아님)에서 무입력 복귀: 대화상자를 닫고 같은 안전 복귀를 한다.
+    // iframe 을 이미 지운 단계(포트 선택·완료·실패)면 포트는 업로더가 이미 닫았으므로 바로 첫 화면으로.
+    if (fwIdleActive()) {
+      el.fw.hidden = true;
+      var noFrame = fw.frameClosed || !frame;
+      fw.phase = null; fw.robot = null; fw.image = null; fw.origin = null; fw.frameClosed = false;
+      state = 'control';
+      if (noFrame) {
+        stopTicker(); warnStart = 0; hideOverlay();
+        console.info('[hub] 복귀(' + reason + ') 펌웨어 대화상자, 제어 화면은 이미 닫힘');
+        backToIntro();
+        return;
+      }
+    }
     if (state !== 'control') return;
     state = 'exiting';
     stopTicker();
@@ -788,6 +844,336 @@
     popControlHistory();   // 버튼·자동 복귀로 나왔으면 제어 화면 기록을 걷어 낸다(뒤로 가기로 나왔으면 이미 없음)
     resetCardTimes();
     if (cards[0]) cards[0].root.focus();
+  }
+
+  // ---------------------------------------------------------------- 펌웨어 업로드
+  // 로봇별 값: robots.config.js 의 firmware(방식·baud·보드 이름·안내), 빌드 결과: hub/firmware/manifest.js(window.HUB_FIRMWARE_MANIFEST).
+  // 업로더는 방식별로 버튼을 누를 때 classic script 로 불러온다(file:// 에서도 되게). 펌웨어 바이트는 manifest 의 data(.js)에 있다.
+  var FLASHERS = {
+    avr: { scripts: ['hub/flash/stk500.js'], global: 'HubSTK500' },
+    esp32: { scripts: ['hub/vendor/esptool.bundle.js', 'hub/flash/esp32.js'], global: 'HubESP32' }
+  };
+  var HAS_SERIAL = 'serial' in navigator;
+  // phase: confirm(설명) → stopping(로봇 정지·제어 화면 닫기) → port(포트 고르기 대기) → flashing → done | failed
+  var fw = { robot: null, origin: null, phase: null, busy: false, frameClosed: false, image: null };
+
+  function fwEntry(robot) {
+    var man = window.HUB_FIRMWARE_MANIFEST;
+    if (!robot || !robot.firmware || !man || !man.robots) return null;
+    return man.robots[robot.id] || null;
+  }
+  function fwHasFiles(entry) { return !!(entry && Array.isArray(entry.files) && entry.files.length && entry.data); }
+
+  function setupFirmware() {
+    el.btnFw.addEventListener('click', function () { if (state === 'control' && current) openFirmware(current, 'control'); });
+    el.fwGo.addEventListener('click', fwGo);
+    el.fwCancel.addEventListener('click', fwCancel);
+  }
+
+  function updateFwButton(robot) {
+    var entry = fwEntry(robot);
+    el.btnFw.hidden = !entry;
+    if (!entry) return;
+    if (HAS_SERIAL) {
+      el.btnFw.removeAttribute('aria-disabled');
+      el.btnFw.title = 'USB 케이블로 ' + robot.name + ' 기본 펌웨어를 올립니다';
+    } else {
+      // 비활성 표시. 누르면 이유를 보여 주도록 클릭은 받고, 대화상자의 업로드 버튼은 꺼 둔다.
+      el.btnFw.setAttribute('aria-disabled', 'true');
+      el.btnFw.title = '이 브라우저에는 Web Serial이 없어 업로드할 수 없습니다(컴퓨터의 Chrome·Edge 필요)';
+    }
+  }
+
+  function shortSha(x) { return x ? String(x).slice(0, 7) : '-'; }
+  function fmtDate(iso) {
+    if (!iso) return '-';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function openFirmware(robot, origin) {
+    if (origin === 'control' ? state !== 'control' : state !== 'intro') return;
+    var entry = fwEntry(robot);
+    if (!entry) return;
+    var cfg = robot.firmware || {};
+    fw.robot = robot; fw.origin = origin; fw.busy = false; fw.frameClosed = false; fw.image = null;
+    // 제어 화면에서 열었으면 무입력 타이머는 계속 돈다(대화상자 조작도 입력). 실제 쓰기(busy) 중에만 tick 이 멈춘다.
+    if (origin === 'control') { warnStart = 0; hideOverlay(); lastInput = Date.now(); }
+    else hideOffsite();
+    state = 'firmware';
+
+    el.fwTitle.textContent = robot.name + ' 펌웨어 업로드';
+    el.fwInfo.textContent = '';
+    var src = entry.source || {};
+    var rows = [
+      ['로봇', robot.name],
+      ['보드', (entry.board || cfg.board || '-') + (entry.fqbn ? ' · ' + entry.fqbn : '')],
+      ['펌웨어', (src.repo ? src.repo + '/' : '') + (src.path || '-')],
+      ['소스 커밋', shortSha(src.commit) + (src.commitDate ? ' (' + fmtDate(src.commitDate) + ')' : '')],
+      ['빌드 날짜', fmtDate(entry.built)],
+      ['크기', entry.size && entry.size.flash ? entry.size.flash.toLocaleString() + ' B' : '-']
+    ];
+    rows.forEach(function (r) { el.fwInfo.appendChild(h('dt', '', r[0])); el.fwInfo.appendChild(h('dd', '', r[1])); });
+
+    el.fwNotes.textContent = '';
+    var note = function (t, cls) { el.fwNotes.appendChild(h('li', cls || '', t)); };
+    if (!HAS_SERIAL) note('이 브라우저에는 Web Serial이 없어 업로드할 수 없습니다. 컴퓨터에서 Chrome이나 Edge로 여세요.', 'warn');
+    if (entry.status === 'failed') {
+      note(fwHasFiles(entry)
+        ? '최신 소스(커밋 ' + shortSha(entry.failedCommit) + ') 빌드에 실패해 이전 펌웨어(커밋 ' + shortSha(src.commit) + ')를 올립니다.'
+        : '펌웨어 빌드에 실패해 올릴 파일이 없습니다.', 'warn');
+    }
+    if (entry.boardNote || cfg.boardNote) note(entry.boardNote || cfg.boardNote, 'warn');
+    note('USB 데이터 케이블로 컴퓨터와 로봇 보드를 연결하세요. 블루투스로는 업로드할 수 없습니다.');
+    if (origin === 'control') note('업로드를 누르면 로봇을 멈추고 제어 화면을 닫은 뒤(연결 해제) 포트를 고릅니다. 끝나면 제어 화면을 다시 엽니다.');
+    else note('열려 있는 로봇 제어 페이지(다른 탭 등)가 같은 USB 포트를 쓰고 있으면 먼저 닫으세요.');
+
+    el.fwWarn.hidden = false;
+    el.fwProgress.hidden = true;
+    el.fwBar.value = 0;
+    el.fwResult.hidden = true;
+    el.fwResult.className = 'fw-result';
+    fw.phase = 'confirm';
+    fwButtons('업로드', '취소', HAS_SERIAL && fwHasFiles(entry));
+    el.fw.hidden = false;
+    el.fwCancel.focus();   // 기본 포커스는 취소(실수로 Enter 를 눌러 덮어쓰지 않게)
+  }
+
+  function fwButtons(goText, cancelText, goEnabled, cancelEnabled) {
+    el.fwGo.hidden = !goText;
+    if (goText) el.fwGo.textContent = goText;
+    el.fwGo.disabled = !goEnabled;
+    el.fwCancel.textContent = cancelText;
+    el.fwCancel.disabled = cancelEnabled === false;
+  }
+
+  function fwStage(text, pct) {
+    el.fwProgress.hidden = false;
+    el.fwStage.textContent = text;
+    if (pct != null) el.fwBar.value = Math.max(0, Math.min(100, pct));
+  }
+
+  function fwResult(ok, text) {
+    el.fwResult.hidden = false;
+    el.fwResult.className = 'fw-result ' + (ok ? 'ok' : 'bad');
+    el.fwResult.textContent = text;
+  }
+
+  function fwGo() {
+    if (fw.busy) return;
+    if (fw.phase === 'confirm') { fwPrepare(); return; }
+    if (fw.phase === 'port' || fw.phase === 'failed') { fwPickAndFlash(); return; }
+    if (fw.phase === 'done') fwClose();
+  }
+
+  // 업로드 중(busy)에는 닫기·Esc·뒤로 가기를 받지 않는다(쓰는 도중 포트를 놓으면 보드가 빈 상태로 남는다)
+  function fwCancel() {
+    if (state !== 'firmware' || fw.busy) return;
+    fwClose();
+  }
+
+  // 대화상자 닫기. 제어 화면에서 열었으면 닫아 둔 iframe 을 다시 만들고 무입력 타이머를 새로 시작한다.
+  function fwClose() {
+    el.fw.hidden = true;
+    var origin = fw.origin, robot = fw.robot;
+    fw.phase = null; fw.robot = null; fw.image = null;
+    if (origin === 'control') {
+      state = 'control';
+      if (fw.frameClosed || !frame) createFrame(robot);
+      fw.frameClosed = false;
+      lastInput = Date.now();
+      confirmStart = Date.now();
+      warnStart = 0;
+      startTicker();
+      el.btnFw.focus();
+    } else {
+      state = 'intro';
+      resetCardTimes();
+      var c = cards.filter(function (x) { return x.robot === robot; })[0];
+      if (c) c.root.focus();
+    }
+  }
+
+  // 1단계: 업로더·펌웨어 데이터를 불러와 확인 → 로봇 안전 정지(stop.steps) → iframe 닫기(제어 웹이 쥔 시리얼 포트를 놓게)
+  // 포트 선택은 다음 클릭(사용자 제스처)에서 한다. 정지에 몇 초 걸리면 이번 클릭의 사용자 활성화가 만료될 수 있기 때문이다.
+  function fwPrepare() {
+    var robot = fw.robot, entry = fwEntry(robot);
+    fw.busy = true;
+    fw.phase = 'stopping';
+    el.fwWarn.hidden = true;
+    el.fwResult.hidden = true;
+    fwButtons('업로드', '취소', false, false);
+    fwStage('펌웨어 파일 확인 중…', 0);
+    fwLoad(robot, entry).then(function (img) {
+      fw.image = img;
+      if (fw.origin !== 'control' || !frame) return null;
+      fwStage('로봇을 멈추고 제어 화면을 닫는 중…', 0);
+      var f = frame;
+      return safeStop(robot, f).then(function (report) {
+        console.info('[hub] 펌웨어 업로드 전 정지 ' + robot.id + ' ' + JSON.stringify(report));
+      }, function (e) { console.warn('[hub] 업로드 전 정지 오류', e); }).then(function () {
+        teardown(f);
+        frame = null; boundWin = null; sameOrigin = false;
+        fw.frameClosed = true;
+        return sleep(300);   // 문서가 사라지며 제어 웹의 포트가 닫히는 시간
+      });
+    }).then(function () {
+      fw.busy = false; lastInput = Date.now();   // 쓰기·정지가 끝난 때부터 무입력 시간을 다시 잰다
+      fw.phase = 'port';
+      fwStage('USB 포트를 고르세요. 목록에서 로봇 보드의 포트(예: USB-SERIAL CH340, CP210x, Arduino)를 고릅니다. 블루투스 포트는 고르지 마세요.', 0);
+      fwButtons('포트 고르고 업로드', fw.frameClosed ? '취소(제어 화면 다시 열기)' : '취소', true);
+      el.fwGo.focus();
+    }, function (e) {
+      fw.busy = false; lastInput = Date.now();   // 쓰기·정지가 끝난 때부터 무입력 시간을 다시 잰다
+      fw.phase = 'confirm';
+      fwButtons('', fw.frameClosed ? '닫기(제어 화면 다시 열기)' : '닫기', false);
+      el.fwProgress.hidden = true;
+      fwResult(false, '펌웨어 파일을 불러오지 못했습니다: ' + (e && e.message || e));
+    });
+  }
+
+  // 2단계: 사용자 제스처 안에서 포트 선택 → 업로드
+  function fwPickAndFlash() {
+    var robot = fw.robot, entry = fwEntry(robot), cfg = robot.firmware || {};
+    el.fwResult.hidden = true;
+    var pick;
+    try { pick = navigator.serial.requestPort(); }
+    catch (e) { pick = Promise.reject(e); }
+    fw.busy = true;
+    fwButtons(el.fwGo.textContent, el.fwCancel.textContent, false, false);
+    pick.then(function (port) {
+      var info = {};
+      try { info = port.getInfo ? port.getInfo() : {}; } catch (e) { /* 무시 */ }
+      if (info.bluetoothServiceClassId) throw flashErr('bt_port', '블루투스 직렬 포트입니다');
+      fw.phase = 'flashing';
+      return fwRun(robot, entry, cfg, port);
+    }).then(function (res) {
+      fw.busy = false; lastInput = Date.now();   // 쓰기·정지가 끝난 때부터 무입력 시간을 다시 잰다
+      fw.phase = 'done';
+      fwStage('완료', 100);
+      fwResult(true, '업로드 완료' + (res && res.baud ? ' (' + res.baud + 'bps)' : '') + '. 로봇이 새 펌웨어로 다시 시작합니다.' +
+        (fw.origin === 'control' ? '\n닫으면 제어 화면을 다시 엽니다.' : ''));
+      fwButtons('', '닫기', false);
+      el.fwCancel.focus();
+    }, function (e) {
+      fw.busy = false; lastInput = Date.now();   // 쓰기·정지가 끝난 때부터 무입력 시간을 다시 잰다
+      var cancelled = e && e.name === 'NotFoundError';   // 포트 선택 창을 닫음
+      fw.phase = cancelled ? 'port' : 'failed';
+      if (cancelled) fwStage('포트를 고르지 않았습니다. 다시 누르세요.', 0);
+      else { console.warn('[hub] 펌웨어 업로드 실패', e); fwResult(false, fwHint(e, robot, entry)); }
+      fwButtons(cancelled ? '포트 고르고 업로드' : '다시 시도', fw.frameClosed ? '닫기(제어 화면 다시 열기)' : '닫기', true);
+      el.fwGo.focus();
+    });
+  }
+
+  function flashErr(code, msg) { var e = new Error(msg); e.code = code; return e; }
+
+  var FW_STAGE = { open: '포트 여는 중', reset: '보드 리셋', sync: '부트로더 동기화', signature: '칩 확인', write: '쓰기', verify: '검증', leave: '마무리', done: '완료' };
+  function fwRun(robot, entry, cfg, port) {
+    var bauds = (entry.bauds && entry.bauds.length) ? entry.bauds : (cfg.bauds || []);
+    var log = function (m) { console.info('[hub][fw] ' + m); };
+    var avr = entry.method === 'avr';
+    var onProgress = function (ev) {
+      var label = FW_STAGE[ev.stage] || ev.stage;
+      var pct = null, txt = label;
+      if (ev.stage === 'sync' && ev.attempt) txt = label + ' (' + ev.attempt + '/' + ev.attempts + ')';
+      if (ev.stage === 'write') { txt = label + ' ' + (ev.percent || 0) + '%'; pct = avr ? (ev.percent || 0) * 0.6 : (ev.percent || 0); }
+      else if (ev.stage === 'verify') {
+        if (avr) { txt = label + ' ' + (ev.percent || 0) + '%'; pct = 60 + (ev.percent || 0) * 0.4; }
+        else txt = '쓰기·검증(MD5)';
+      }
+      if (ev.stage === 'open' || ev.stage === 'reset') pct = 0;
+      fwStage(txt + (ev.baud ? ' · ' + ev.baud + 'bps' : ''), pct);
+    };
+    var lib = window[FLASHERS[entry.method].global];
+    var img = fw.image;
+    if (avr) {
+      var maxSize = entry.size && (entry.size.flashLimit || entry.size.flashMax);
+      return lib.flash(port, img.hex, { bauds: bauds, signature: entry.signature || cfg.signature, maxSize: maxSize, onProgress: onProgress, log: log });
+    }
+    return lib.flash(port, img.files, { bauds: bauds, chip: cfg.chip, onProgress: onProgress, log: log });
+  }
+
+  // 실패 원인 추정 문구
+  function fwHint(e, robot, entry) {
+    var cfg = robot.firmware || {};
+    var code = e && e.code;
+    var extra = cfg.portHint ? '\n' + cfg.portHint : '';
+    var t;
+    if (code === 'port_busy' || (e && (e.name === 'NetworkError' || e.name === 'InvalidStateError'))) {
+      t = '포트를 열 수 없습니다(사용 중). Arduino IDE 시리얼 모니터, 다른 탭의 제어 화면 등 이 포트를 쓰는 프로그램을 닫고 다시 시도하세요.' + extra;
+    } else if (code === 'no_sync') {
+      t = '보드와 동기화하지 못했습니다. 고른 포트가 이 로봇이 맞는지, 보드 종류나 부트로더가 설정(' + (entry.board || cfg.board || entry.fqbn) + ')과 다르지 않은지 확인하세요. 충전 전용 USB 케이블은 데이터가 가지 않습니다.' + extra;
+    } else if (code === 'signature_mismatch' || code === 'chip_mismatch') {
+      t = '보드의 칩이 이 펌웨어와 다릅니다. 다른 로봇의 포트를 골랐을 수 있습니다.';
+    } else if (code === 'verify_failed') {
+      t = '기록 검증에 실패했습니다. USB 케이블과 로봇 전원을 확인하고 다시 시도하세요.';
+    } else if (code === 'too_large') {
+      t = '펌웨어가 보드 용량보다 큽니다. 보드 종류 설정을 확인하세요.';
+    } else if (code === 'bt_port') {
+      t = '블루투스 직렬 포트를 골랐습니다. 업로드는 USB 케이블 포트로만 됩니다.';
+    } else if (code === 'io') {
+      t = '업로드 중 연결이 끊겼습니다. USB 케이블(데이터용인지)과 로봇 전원을 확인하세요.';
+    } else {
+      t = '업로드에 실패했습니다.';
+    }
+    return t + '\n(자세히: ' + String(e && e.message || e) + ')';
+  }
+
+  // 업로더 스크립트와 펌웨어 데이터(firmware.data.js)를 classic script 로 불러오고 sha256 을 확인한다.
+  var scriptCache = Object.create(null);
+  function loadScript(src) {
+    if (!scriptCache[src]) {
+      scriptCache[src] = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = function () { resolve(); };
+        s.onerror = function () { delete scriptCache[src]; reject(new Error(src + ' 를 불러오지 못했습니다')); };
+        document.body.appendChild(s);
+      });
+    }
+    return scriptCache[src];
+  }
+
+  function fwLoad(robot, entry) {
+    var lib = FLASHERS[entry.method];
+    if (!lib) return Promise.reject(new Error('알 수 없는 업로드 방식: ' + entry.method));
+    var p = Promise.resolve();
+    lib.scripts.forEach(function (src) { p = p.then(function () { return loadScript(src); }); });
+    return p.then(function () { return loadScript(entry.data); }).then(function () {
+      if (!window[lib.global]) throw new Error('업로더를 불러오지 못했습니다');
+      var data = window.HUB_FIRMWARE_DATA && window.HUB_FIRMWARE_DATA[robot.id];
+      if (!data || !Array.isArray(data.files)) throw new Error('펌웨어 데이터가 없습니다');
+      var byName = Object.create(null);
+      data.files.forEach(function (f) { byName[f.name] = f; });
+      var img = { hex: null, files: [] };
+      return Promise.all(entry.files.map(function (meta) {
+        var f = byName[meta.name];
+        if (!f) throw new Error(meta.name + ' 데이터가 없습니다');
+        var bytes = f.kind === 'hex' ? new TextEncoder().encode(f.text) : b64bytes(f.base64);
+        if (f.kind === 'hex') img.hex = f.text;
+        else img.files.push({ name: meta.name, address: meta.address, data: bytes });
+        return sha256hex(bytes).then(function (hx) {
+          if (hx && hx !== meta.sha256) throw new Error(meta.name + ' 무결성(sha256) 불일치');
+        });
+      })).then(function () { return img; });
+    });
+  }
+
+  function b64bytes(b64) {
+    var bin = atob(b64), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  // crypto.subtle 이 없는 환경(보안 컨텍스트 아님)이면 확인을 건너뛴다(null)
+  function sha256hex(bytes) {
+    var c = window.crypto && window.crypto.subtle;
+    if (!c) return Promise.resolve(null);
+    return c.digest('SHA-256', bytes).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    });
   }
 
   var toastTimer = null;

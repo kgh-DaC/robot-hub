@@ -16,3 +16,4 @@ SMARS(`smars_web`), Otto(`ottobot`), 로봇 개(`robot_dog`), 셀프 밸런싱 �
 | --- | --- | --- | --- |
 | 2026-11-25 | Harness v2로 처음 구성 | 전체 | - |
 | 2026-11-25 | 인수 문서(HANDOFF.md)와 세션 종료 갱신 규칙 추가, 정지 설정을 stop.steps(이벤트 종류·skipIf)로 확장, 로봇 개 API 프록시(serve.py) 추가 | CLAUDE.md, hub-shell, hub-qa-check, robot-hub-orchestrator | 사용자 요청, 인벤토리 결과 |
+| 2026-11-26 | 펌웨어 선택 업로드 구조(hub/flash, hub/firmware, 빌드 스크립트·CI)와 시험(flow_firmware.mjs, test_stk500.mjs, 대화상자 중 무입력 복귀) 추가 | hub-shell, hub-qa-check | 사용자 요청, QA #11 |

@@ -79,6 +79,24 @@ window.RobotHub.register({
 ## QA 파라미터
 `index.html?idleMs=3000&warnMs=1000&robot={id}`을 지원한다. `idleMs`/`warnMs`는 설정값을 덮어쓰고, `robot`은 해당 로봇 control 화면으로 바로 들어간다. 타이머를 몇 분씩 기다리지 않고 시험할 수 있어야 QA가 복귀 흐름을 검증할 수 있다.
 
+## 펌웨어 업로드
+제어 화면 상단바의 "펌웨어 업로드" 버튼(사용자가 누를 때만, 자동 업로드 없음)으로 그 로봇의 기본 펌웨어를 USB(Web Serial)로 올린다.
+```
+hub/robots.config.js  firmware: { sketch, fqbn, core, libraries, libraryDirs, flashLimit,   ← 빌드 입력
+                                  method: 'avr'|'esp32', bauds, signature, chip, board, boardNote, portHint }  ← 업로드·표시
+tools/build_firmware.mjs   위 설정을 읽어 arduino-cli 로 빌드 → hub/firmware/{id}/(산출물 + firmware.data.js), manifest.json/.js
+hub/firmware/manifest.js   window.HUB_FIRMWARE_MANIFEST (index.html 이 classic script 로 로드). 항목이 없으면 버튼을 숨긴다
+hub/flash/stk500.js        AVR: Intel HEX → DTR/RTS 리셋 → GET_SYNC → 서명 → PROG_PAGE 128B → READ_PAGE 검증 → LEAVE
+hub/flash/esp32.js + hub/vendor/esptool.bundle.js   ESP32: esptool-js, 파일별 주소, eraseAll 없음, flash 설정 keep, MD5 검증
+```
+- 업로더·펌웨어 데이터는 버튼을 누를 때 classic script 로 불러온다(file:// 에서 fetch·ES module 이 막히므로 바이트도 `firmware.data.js` 에 base64/HEX 문자열로 둔다). sha256 을 manifest 와 대조한다.
+- 흐름: 확인 대화상자(로봇·보드·소스 커밋·빌드 날짜, 덮어쓰기 경고, USB 안내) → [업로드] = 안전 정지(stop.steps, 나가기와 같은 safeStop) → iframe 제거(제어 웹이 쥔 포트를 놓게) → [포트 고르고 업로드] = `requestPort()`(정지에 몇 초 걸려 첫 클릭의 사용자 활성화가 만료될 수 있어 두 번째 클릭에서) → 진행률 → 결과(원인 추정 문구) → 닫기 = iframe 다시 생성, 무입력 타이머 재시작.
+- 대화상자 동안 state 는 `firmware`. 무입력 타이머는 **실제 쓰기(busy: 정지 처리·포트 선택 창·리셋~검증) 중에만** 멈추고, 확인·포트·완료·실패 단계에서는 평소처럼 돈다(대화상자 클릭·키도 입력). 경고는 대화상자 위(`.overlay.over-fw`)에 뜨고, 복귀 시 대화상자를 닫고 안전 복귀(iframe 이 이미 없으면 바로 첫 화면). busy 가 끝나면 그때부터 다시 잰다. Esc·뒤로 가기는 대화상자 닫기(busy 중 무시), 새로고침은 확인.
+- iframe 없이 여는 로봇(offsite/fileOffsite)은 안내 대화상자의 "USB로 펌웨어 업로드"로 같은 대화상자를 연다(정지·iframe 단계 없음).
+- Web Serial 이 없으면 버튼을 `aria-disabled` 로 표시하고, 누르면 이유와 함께 업로드 버튼이 꺼진 대화상자를 보인다.
+- CI(`pages.yml` sync 잡): 서브모듈 갱신 → arduino-cli 1.5.1 → `node tools/build_firmware.mjs --install` → 포인터·펌웨어 함께 커밋. 스케치 폴더 마지막 커밋과 빌드 설정 키가 manifest 와 같으면 건너뛴다. 실패 로봇은 이전 펌웨어 유지 + `status:'failed'`, 잡은 실패 표시, deploy 는 `!cancelled()` 로 계속.
+- 시험: `node tools/test_stk500.mjs`(가짜 부트로더), `flow_firmware.mjs`(hub-qa-check, 가짜 navigator.serial 로 대화상자 전체 흐름).
+
 ## 구현 체크
 - 셸 코드에 로봇 id를 하드코딩하지 않는다(설정 순회).
 - 키보드만으로 선택·나가기가 된다. Esc = 나가기(확인 없이 안전 복귀).

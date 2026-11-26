@@ -29,6 +29,7 @@
     <button id="btnHome" class="btn-home" type="button" aria-keyshortcuts="Escape">← 처음으로</button>
     <h1 id="robotName" class="robot-name"></h1>
     <p id="idleLeft" class="idle-left" aria-live="off"></p>
+    <button id="btnFw" class="btn-fw" type="button" hidden>펌웨어 업로드</button>
   </header>
   <p id="modeNote" class="mode-note" role="note" hidden></p>
   <div id="frameHost" class="frame-host"></div>
@@ -65,6 +66,26 @@
       <button id="btnOffsiteClose" class="btn-secondary" type="button">닫기</button>
       <a id="offsiteLink" class="btn-primary btn-link" target="_blank" rel="noopener"></a>
     </div>
+    <button id="btnOffsiteFw" class="btn-secondary btn-offsite-fw" type="button" hidden>USB로 펌웨어 업로드</button>
+  </div>
+</div>
+
+<!-- 펌웨어 업로드: 사용자가 버튼을 눌렀을 때만. 확인 → 로봇 정지·제어 화면 닫기 → 포트 고르기 → 업로드 → 결과 -->
+<div id="fw" class="overlay fw" role="dialog" aria-modal="true" aria-labelledby="fwTitle" aria-describedby="fwWarn" hidden>
+  <div class="dialog fw-dialog">
+    <h2 id="fwTitle">펌웨어 업로드</h2>
+    <dl id="fwInfo" class="fw-info"></dl>
+    <p id="fwWarn" class="fw-warn">로봇의 기존 펌웨어를 덮어씁니다.</p>
+    <ul id="fwNotes" class="fw-notes"></ul>
+    <div id="fwProgress" class="fw-progress" hidden>
+      <p id="fwStage" class="fw-stage" aria-live="polite"></p>
+      <progress id="fwBar" max="100" value="0"></progress>
+    </div>
+    <p id="fwResult" class="fw-result" role="status" hidden></p>
+    <div class="actions">
+      <button id="fwCancel" class="btn-secondary" type="button">취소</button>
+      <button id="fwGo" class="btn-primary" type="button">업로드</button>
+    </div>
   </div>
 </div>
 
@@ -74,6 +95,8 @@
 
 <!-- 순서 중요: 설정 → 셸(window.RobotHub 정의) → 셸이 hub/robots/{id}.js 를 classic script 로 불러온다 -->
 <script src="hub/robots.config.js"></script>
+<!-- 펌웨어 정보(tools/build_firmware.mjs 가 생성). 업로더·펌웨어 데이터는 버튼을 누를 때 불러온다 -->
+<script src="hub/firmware/manifest.js"></script>
 <script src="hub/hub.js"></script>
 </body>
 </html>

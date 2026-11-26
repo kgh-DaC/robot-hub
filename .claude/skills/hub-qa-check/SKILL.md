@@ -33,6 +33,8 @@ FAIL 줄을 그대로 보고서에 옮긴다.
 
 정지 도달 판정 시험: `scripts/fake_gateway.py`(항상 ok)·`scripts/fake_gateway_fail.py`(실패 응답)·`scripts/fake_gateway_hang.py`(응답 지연 → unconfirmed)를 띄우고 `ROBOTDOG_GATEWAY`를 그 주소로 준 허브 서버에 대고 `scripts/flow_stop_delivery.mjs`를 돌린다. 게이트웨이가 없으면 offline 토스트, 실패 응답이면 경고 오버레이, ok면 confirmed가 기대값이다.
 
+펌웨어 업로드 시험: `node tools/test_stk500.mjs`(AVR 업로더 단위 시험, 가짜 STK500 부트로더), 서버를 띄운 상태에서 `node .claude/skills/hub-qa-check/scripts/flow_firmware.mjs <임시 프로필> <통합 절대 경로>`(가짜 navigator.serial 로 확인 → 정지·iframe 닫기 → 포트 → 쓰기·검증 → 완료 → iframe 재생성, 포트 사용 중 안내, file:// 로봇 개 안내 대화상자, Web Serial 없음). 실제 포트에는 연결하지 않는다.
+
 그 밖의 스크립트: `flow_focus.mjs`(경고 취소 후 포커스 — **실제 마우스 클릭**(CDP Input.dispatchMouseEvent)으로 시험한다. `el.click()`은 포커스 이동을 재현하지 못한다), `net_check.mjs`(4대 페이지 로드 시 4xx·실패 요청 0건).
 
 ## 4. 흐름 검사 (코드 읽기 + QA 파라미터)

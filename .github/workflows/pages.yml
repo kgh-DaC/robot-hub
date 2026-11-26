@@ -2,6 +2,10 @@
 # - 로봇 레포(smars_web/ottobot/robot_dog/self-balancing-bike_app)에 push된 변경을
 #   매시간(또는 수동 실행·repository_dispatch) 가져와 서브모듈 포인터를 갱신하고 Pages에 다시 배포한다.
 # - 로봇 레포 쪽에서 즉시 반영하려면 그 레포에서 이 레포로 repository_dispatch(type: robot-updated)를 보내면 된다.
+# - 서브모듈 갱신 뒤 로봇별 기본 펌웨어를 다시 빌드한다(tools/build_firmware.mjs). 스케치 폴더의 마지막 커밋과
+#   빌드 설정이 manifest 와 같은 로봇은 건너뛴다(ESP32 바이너리는 빌드마다 바이트가 달라 매번 커밋되는 것을 막음).
+# - 펌웨어 빌드가 실패해도 그 로봇의 기존 펌웨어는 그대로 두고(manifest 에 failed 표시) 포인터·다른 로봇 결과는 커밋한다.
+#   sync 잡은 실패로 표시되지만 deploy 는 계속 돌아(if: !cancelled()) 웹 변경은 배포된다.
 name: pages
 
 on:
@@ -28,21 +32,50 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: 로봇 서브모듈을 각 레포 최신 커밋으로
-        run: git submodule update --init --remote --recursive
-      - name: 바뀐 포인터 커밋
         run: |
-          if git diff --quiet; then
-            echo "로봇 레포 변경 없음"
+          git submodule update --init --remote --recursive
+          # 펌웨어 '소스 커밋'(git log -- 스케치 폴더)을 정확히 구하려면 서브모듈 이력이 다 있어야 한다
+          git submodule foreach --quiet 'if [ "$(git rev-parse --is-shallow-repository)" = true ]; then git fetch --unshallow --quiet; fi'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: arduino/setup-arduino-cli@v2
+        with:
+          version: 1.5.1
+      # 코어·라이브러리(버전은 hub/robots.config.js 의 firmware.core / libraries 에 고정)와 컴파일 캐시
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.arduino15
+            ~/.cache/arduino
+            .fwbuild/arduino-user
+          key: arduino-${{ runner.os }}-${{ hashFiles('hub/robots.config.js') }}
+          restore-keys: arduino-${{ runner.os }}-
+      - name: 펌웨어 빌드
+        id: fw
+        continue-on-error: true
+        run: node tools/build_firmware.mjs --install
+      - name: 바뀐 포인터·펌웨어 커밋
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "로봇 레포·펌웨어 변경 없음"
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "chore: 로봇 서브모듈 최신화 ($(git submodule status | awk '{print substr($1,1,7)" "$2}' | tr '\n' ' '))"
+            git add -A   # .fwbuild/(빌드 임시)는 .gitignore
+            git commit -m "chore: 로봇 서브모듈·펌웨어 최신화 ($(git submodule status | awk '{print substr($1,1,7)" "$2}' | tr '\n' ' '))"
             git push
           fi
+      - name: 펌웨어 빌드 실패 표시
+        if: steps.fw.outcome == 'failure'
+        run: |
+          echo "::error::펌웨어 빌드 실패. 기존 펌웨어는 유지했고 hub/firmware/manifest.json 에 failed 로 적었다."
+          exit 1
 
   deploy:
     needs: sync
+    # 펌웨어 빌드 실패로 sync 가 실패해도 배포는 한다(실패 로봇은 이전 펌웨어 + manifest 의 failed 표시)
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       pages: write

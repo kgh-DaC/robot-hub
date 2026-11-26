@@ -1,3 +1,5 @@
 _workspace/
 _workspace_*/
 .claude/settings.local.json
+.fwbuild/
+tools/vendor-esptool/node_modules/

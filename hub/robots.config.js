@@ -16,6 +16,20 @@
  * stop.checkMs   (선택) 정지를 보낸 때부터 도달 판정을 기다리는 최대 시간(기본 3000, 최대 10000)
  *   실패/미확인이면 허브는 iframe 을 지우지 않고 "정지 명령이 전달되지 않았을 수 있습니다" 경고를 띄운다.
  *   failCheck/okCheck 가 없는 로봇은 도달을 확인하지 않는다(delivery: unchecked).
+ *
+ * firmware        (선택) 기본 펌웨어 업로드. 제어 화면 상단 "펌웨어 업로드" 버튼을 눌렀을 때만 올린다(자동 업로드 없음).
+ *   빌드 입력(tools/build_firmware.mjs 가 읽는다. 셸은 화면 표시와 업로드 방식만 쓴다)
+ *     sketch       스케치 폴더(통합/ 기준). 맨 앞 폴더가 소스 저장소(서브모듈)다.
+ *     fqbn         arduino-cli 보드 이름. core 는 '패키지:아키텍처@버전'(CI 와 로컬이 같은 버전을 쓴다)
+ *     libraries    라이브러리 매니저에서 설치할 '이름@버전' 목록
+ *     libraryDirs  (선택) 추가 --libraries 폴더(통합/ 기준, 소스 저장소 안에 있는 것)
+ *     flashLimit   (선택) 이 크기(B)를 넘으면 그 로봇 빌드를 실패로 처리(실측 한도)
+ *   업로드(브라우저)
+ *     method       'avr'(STK500v1, hub/flash/stk500.js) | 'esp32'(esptool-js, hub/vendor/esptool.bundle.js)
+ *     bauds        앞에서부터 시도. avr: 부트로더 baud(동기화 실패 시 다음 값), esp32: 스텁 전송 baud(ROM 접속은 115200)
+ *     signature    (avr) 칩 서명 3바이트 hex. 다르면 업로드하지 않는다(보드가 다름)
+ *     board        대화상자에 보이는 보드 이름, boardNote 미확인 사항, portHint 포트를 열 수 없을 때 덧붙일 안내
+ *   빌드 결과(크기·sha256·소스 커밋·빌드 날짜)는 hub/firmware/manifest.json(.js) 에서 읽는다.
  */
 window.ROBOTS = [
   {
@@ -25,8 +39,10 @@ window.ROBOTS = [
     // 01_inventory_smars.json control_page.path
     page: 'smars_web/twin/smars_console.html',
     pagesUrl: null,
-    // connection.type = ["serial"] (USB 57600, HC-05 는 블루투스 COM 포트로 같은 Web Serial 경로)
-    connection: ['serial'],
+    // 연결 방식(2026-11-26 SMARS 콘솔에 BLE 추가, smars_console.html:10, 336, 767-815):
+    //   블루투스 BLE(기본, Web Bluetooth, HM-10/HC-08/AT-09 계열 FFE0 → FFF0 → Nordic UART) → 태블릿에서도 연결 가능
+    //   USB 시리얼 57600 / 블루투스 COM(HC-05, 같은 Web Serial 경로) / 시뮬레이션
+    connection: ['ble', 'serial'],
     stop: {
       steps: [
         // stop.page_hook: button.dp.stop[data-dir="S"] 는 pointerdown 핸들러만 있음(smars_console.html:1521-1529). 연결 전 disabled.
@@ -44,6 +60,18 @@ window.ROBOTS = [
     },
     // stop.failsafe_detail: 펌웨어 워치독 600ms (AUTO 중 3000ms)
     failsafe: '600ms 무명령 시 자동 정지',
+    // 기본 펌웨어: twin/smars_firmware (제어 웹 twin/smars_console.html 의 명령 전체를 처리하는 펌웨어)
+    firmware: {
+      sketch: 'smars_web/twin/smars_firmware',
+      fqbn: 'arduino:avr:uno',
+      core: 'arduino:avr@1.8.8',
+      libraries: [],
+      method: 'avr',
+      bauds: [115200, 57600],
+      signature: '1e950f',
+      board: 'Arduino Uno 호환 (ATmega328P)',
+      portHint: ''
+    },
     accent: 'var(--c-smars)'
   },
   {
@@ -74,6 +102,20 @@ window.ROBOTS = [
     },
     // stop.evidence: config.h:86 MOVE_WATCHDOG_MS 1500
     failsafe: '1.5초 무수신 시 정지',
+    // 기본 펌웨어: firmware/otto_fat. ottobot 하네스(otto-firmware compile.py) 기준 FQBN arduino:avr:uno
+    // (이 Nano 는 Optiboot, 115200 업로드 확인). Flash 실측 한도 30,720B(넘으면 업로드는 되나 부팅이 멈춤, docs/HANDOVER.md)
+    firmware: {
+      sketch: 'ottobot/firmware/otto_fat',
+      fqbn: 'arduino:avr:uno',
+      core: 'arduino:avr@1.8.8',
+      libraries: ['OttoDIYLib@13.0.0', 'Servo@1.3.0'],
+      flashLimit: 30720,
+      method: 'avr',
+      bauds: [115200, 57600],
+      signature: '1e950f',
+      board: 'Arduino Nano 호환 (ATmega328P, Optiboot)',
+      portHint: ''
+    },
     accent: 'var(--c-ottobot)'
   },
   {
@@ -148,6 +190,20 @@ window.ROBOTS = [
     },
     // stop.failsafe_detail: LEASE_TIMEOUT_MS 1000
     failsafe: '1초 하트비트 리스',
+    // 기본 펌웨어: tools/servoInitPose (robot_control_web 의 WALKHB 등 명령을 처리하는 스케치. software/robot_dog_esp32 아님)
+    // 기록 영역: 부트로더 0x1000, 파티션 0x8000, boot_app0 0xe000, 앱 0x10000. 플래시 전체 지우기 안 함(Preferences/EEPROM 유지)
+    firmware: {
+      sketch: 'robot_dog/esp32-robot-dog-code-master/tools/servoInitPose',
+      fqbn: 'esp32:esp32:esp32',
+      core: 'esp32:esp32@3.3.12',
+      // ESP32_ISR_Servo 는 코어 2.x 에서만 쓴다(servoInitPose.ino:8-10 #if ESP_ARDUINO_VERSION_MAJOR < 3). 코어 3.3.12 빌드에는 안 들어가지만 인벤토리 기준으로 설치는 해 둔다.
+      libraries: ['ESP32_ISR_Servo@1.5.0'],
+      method: 'esp32',
+      chip: 'ESP32',
+      bauds: [460800, 115200],
+      board: 'ESP32 개발 보드 (ESP32-WROOM, 4MB)',
+      portHint: '로봇 개 USB 게이트웨이(usb_gateway.py)나 다른 시리얼 프로그램이 포트를 쥐고 있으면 끄고 다시 시도하세요. 연결이 안 되면 보드의 BOOT 버튼을 누른 채 업로드를 다시 누르세요.'
+    },
     accent: 'var(--c-robotdog)'
   },
   {
@@ -170,6 +226,22 @@ window.ROBOTS = [
     },
     // stop.evidence: remote.ino 500ms 무수신 시 중립. 페이지도 hidden/pagehide 시 중립 전송(index.html:971-981)
     failsafe: '500ms 무수신 시 중립',
+    // 기본 펌웨어: 03.Firmware/self_balancing_bike. ServoTimer2 는 저장소 안 _workspace/lib 를 --libraries 로 쓴다.
+    // 보드 종류 미확인: Nano 가정(arduino:avr:nano = 신형 부트로더 115200). 동기화가 안 되면 57600(구형 부트로더)으로 다시 시도한다.
+    firmware: {
+      sketch: 'self-balancing-bike_app/03.Firmware/self_balancing_bike',
+      fqbn: 'arduino:avr:nano',
+      core: 'arduino:avr@1.8.8',
+      libraries: [],
+      libraryDirs: ['self-balancing-bike_app/_workspace/lib'],
+      method: 'avr',
+      bauds: [115200, 57600],
+      signature: '1e950f',
+      board: 'Arduino Nano 호환 (ATmega328P)',
+      boardNote: '보드 종류를 아직 확인하지 못했습니다(Nano 가정).',
+      // HC-05 가 D0/D1(하드웨어 Serial)을 USB 와 같이 쓴다(self_balancing_bike.ino:79 Serial.begin(9600) HC-05 data-mode) → 업로드 응답이 섞일 수 있다
+      portHint: 'HC-05 블루투스 모듈이 D0/D1(하드웨어 Serial)에 물려 있어 업로드가 실패하면 블루투스 모듈을 빼고 다시 시도하세요.'
+    },
     accent: 'var(--c-bike)'
   }
 ];

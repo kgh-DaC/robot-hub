@@ -177,8 +177,12 @@ button { font: inherit; }
 .card-env.info { background: var(--fill-2); color: var(--text); }
 .card-env.warn { background: var(--warn-bg); color: var(--warn-text); }
 
+/* 첫 줄 오른쪽(로고와 같은 높이). 좁은 폭에서도 로고 줄 오른쪽에 둔다 */
 .btn-full {
-  margin-top: 8px;
+  position: absolute;
+  right: 0;
+  top: 8px;
+  z-index: 1;
   min-height: 40px;
   padding: 0 16px;
   border: 1.5px solid var(--border);
@@ -288,6 +292,52 @@ button { font: inherit; }
 .dialog .note { font-size: 15px; color: var(--muted); }
 .btn-primary:focus-visible, .btn-secondary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 @media (max-width: 520px) { .dialog .actions { flex-direction: column; } }
+
+/* ------------------------------------------------------------ 펌웨어 업로드 */
+/* 상단바 오른쪽 끝(남은 시간 표시 다음). 처음으로 버튼보다 한 단계 약하게 */
+.btn-fw {
+  flex: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--fill);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+@media (hover: hover) { .btn-fw:hover { background: var(--fill-2); } }
+.btn-fw[aria-disabled="true"] { opacity: .55; cursor: help; }
+@media (max-width: 600px) {
+  .topbar { gap: 8px; }
+  .btn-home { padding: 0 12px; font-size: 16px; }
+  .btn-fw { padding: 0 10px; font-size: 14px; }
+  .idle-left { font-size: 13px; }
+}
+.btn-offsite-fw { width: 100%; min-height: 52px; margin-top: 12px; font-size: 17px; }
+
+.fw { z-index: 26; }
+.overlay.over-fw { z-index: 27; }   /* 펌웨어 대화상자 위에 뜨는 무입력 경고 */
+.fw-dialog { width: min(600px, 100%); max-height: calc(100% - 20px); overflow: auto; text-align: left; }
+.fw-dialog h2 { text-align: center; }
+.fw-info { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0 12px; font-size: 16px; }
+.fw-info dt { color: var(--muted); font-weight: 600; }
+.fw-info dd { margin: 0; overflow-wrap: anywhere; }
+.fw-info code { font-size: 14px; }
+.dialog .fw-warn { margin: 0 0 8px; padding: 10px 14px; border-radius: 10px; background: var(--bad-bg); color: var(--bad-text); font-weight: 700; }
+.fw-notes { margin: 0 0 8px; padding-left: 1.3em; font-size: 15px; line-height: 1.5; }
+.fw-notes li { margin: 2px 0; }
+.fw-notes li.warn { color: var(--warn-text); background: var(--warn-bg); border-radius: 6px; padding: 2px 6px; list-style-position: inside; margin-left: -1.3em; }
+.fw-progress { margin: 10px 0 4px; }
+.dialog .fw-stage { margin: 0 0 6px; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fw-progress progress { width: 100%; height: 18px; accent-color: var(--focus); }
+.dialog .fw-result { margin: 10px 0 0; padding: 10px 14px; border-radius: 10px; font-size: 16px; white-space: pre-line; }
+.fw-result.ok { background: var(--fill-2); color: var(--text); font-weight: 700; }
+.fw-result.bad { background: var(--bad-bg); color: var(--bad-text); }
+.btn-primary:disabled, .btn-secondary:disabled { opacity: .5; cursor: not-allowed; }
 
 @media (prefers-reduced-motion: reduce) {
   .card { transition: none; }
