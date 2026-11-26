@@ -22,10 +22,10 @@ window.HUB_FIRMWARE_MANIFEST = {
         "path": "twin/smars_firmware",
         "commit": "11d011fbf1ebe318518ee15789d313f12abdf745",
         "commitDate": "2026-11-22T22:39:50+09:00",
-        "head": "3ac28705529646fa2479f386a87217ab8075974a",
+        "head": "e437c97f37375e071cea463616893e27872a4e06",
         "dirty": false
       },
-      "built": "2026-11-26T12:20:20.725Z",
+      "built": "2026-11-26T13:16:25.359Z",
       "toolchain": {
         "arduinoCli": "1.5.1",
         "core": "arduino:avr@1.8.8",
@@ -70,7 +70,7 @@ window.HUB_FIRMWARE_MANIFEST = {
         "head": "ece9b4a15a797f76bd600fa5e1dab6e011554e23",
         "dirty": false
       },
-      "built": "2026-11-26T12:20:27.926Z",
+      "built": "2026-11-26T13:16:27.101Z",
       "toolchain": {
         "arduinoCli": "1.5.1",
         "core": "arduino:avr@1.8.8",
@@ -119,14 +119,14 @@ window.HUB_FIRMWARE_MANIFEST = {
         "head": "fc0672de74a6d9aa302343c695d4faec399de693",
         "dirty": false
       },
-      "built": "2026-11-26T12:35:14.348Z",
+      "built": "2026-11-26T13:17:07.202Z",
       "toolchain": {
         "arduinoCli": "1.5.1",
         "core": "esp32:esp32@3.3.12",
         "libraries": []
       },
       "size": {
-        "flash": 1142623,
+        "flash": 1142559,
         "flashMax": 1310720,
         "ram": 52124,
         "ramMax": 327680
@@ -162,8 +162,8 @@ window.HUB_FIRMWARE_MANIFEST = {
           "name": "app.bin",
           "kind": "bin",
           "address": 65536,
-          "size": 1142768,
-          "sha256": "363cfa28d4b97631de0434c478e45b4f5a6b5478c2355e295cb87e97074771b1"
+          "size": 1142704,
+          "sha256": "b059daea6fd34865bfb9a07a974339c22a1a9169d7e116eba27e16be2a1ad108"
         }
       ],
       "data": "hub/firmware/robotdog/firmware.data.js"
@@ -190,7 +190,7 @@ window.HUB_FIRMWARE_MANIFEST = {
         "head": "b57f147ea1bcaddfb1dadc409828ea109377f291",
         "dirty": false
       },
-      "built": "2026-11-26T12:28:37.190Z",
+      "built": "2026-11-26T13:17:08.358Z",
       "toolchain": {
         "arduinoCli": "1.5.1",
         "core": "arduino:avr@1.8.8",
