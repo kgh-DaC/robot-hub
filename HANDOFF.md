@@ -92,3 +92,4 @@ obot-hub-fwbuild |
 | 2026-11-26 | 바이크 보드 Nano 확인(사용자). 바이크 제어 웹 하단에 핀 연결 카드 추가(self-balancing-bike_app `ff879cb`, PCB 회로도 `Downloads/새 폴더/open source balance bike/04.SCH/SCH.pdf` 기준). 확인된 펌웨어↔PCB 차이: 배터리 분배 전압은 PCB A0인데 원본 코드는 A7(현 펌웨어는 미사용), D10은 PCB에서 360° 뒷바퀴 서보, D5(DIRM) 커넥터 없음 |
 | 2026-11-26 | 바이크 핀 카드 정정: 제작 PCB 레포 `kgh-DaC/self-balancing-bike_pcb`(private) 기준. FlyWheel 1 VIN(나노 쪽) … 8 B로 원본 SCH와 반대, 엔코더 A=D3·B=D2, U2 TPS563201 3A, 역접속 보호 없음. 이전 카드의 FlyWheel 번호·엔코더 A/B는 틀렸었음 |
 | 2026-11-26 | 바이크 핀 카드: 나노 그림 옆에 제작 PCB 윗면 그림(실척, 커넥터 핀 번호·신호) 추가 |
+| 2026-11-26 | 바이크 핀 카드: 별도 나노 그림 삭제(사용자 요청), PCB 윗면 그림 하나로 표시 |
