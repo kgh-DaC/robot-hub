@@ -103,3 +103,4 @@ obot-hub-fwbuild |
 | 2026-11-27 | 갤럭시 탭에서 SMARS·바이크 HC-05 연결: 두 제어 웹의 Web Serial `requestPort`에 SPP(`allowedBluetoothServiceClassIds`) 추가. SMARS 콘솔에 '블루투스 시리얼 (HC-05)' 방식 재추가(smars_web), 바이크 안내·미지원 문구 수정(self-balancing-bike_app). 허브 iframe은 이미 `allow=serial`. check_hub 163/163, 실물 미시험 |
 | 2026-11-27 | SMARS 콘솔(smars_web 99b950b): '블루투스 시리얼 (HC-05)' 다시 삭제, 연결 카드를 학습 페이지 링크 바로 아래로, 핀 연결을 L298P 쉴드 단자 중심 개념도·표(단자별 우노 핀)로. BT 표기 A1(아두이노 TX)/A0(아두이노 RX)은 **표시만**(펌웨어는 RX=A1, TX=A0 — 실물 확인 필요). 정지 선택자(`#btnDisconnect`, `button.dp.stop`) 그대로, check_hub 163/163 |
 | 2026-11-27 | Otto 제어 웹(ottobot 001cfa9) 핀 연결 카드: 아두이노 나노 확장 쉴드 그림(ref/led matrix 회로도.jpg 배치, 위 디지털·아래 아날로그 G·V·S 열, RX TX·I2C 헤더, 부품 블록→헤더 연결선) + 표 '쉴드 단자' 열. 핀 번호 변경 없음. bundle --check 일치, 렌더 콘솔 오류 0, check_hub 163/163 |
+| 2026-11-28 | Otto 핀 연결 그림(ottobot ca6b11d): 위쪽 부품 블록을 헤더 순서(D13→D2: 부저·BLE·초음파·팔·다리)로, 블록 안 선 출발점도 핀 번호 순 → 연결선 꼬임 없음. 깃허브 페이지는 001cfa9부터 이미 새 그림이 배포돼 있었음(안 보이면 Ctrl+F5) |
