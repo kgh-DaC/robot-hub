@@ -41,7 +41,7 @@ window.ROBOTS = [
     pagesUrl: null,
     // 연결 방식(2026-11-26 SMARS 콘솔에 BLE 추가, smars_console.html:10, 336, 767-815):
     //   블루투스 BLE(기본, Web Bluetooth, HM-10/HC-08/AT-09 계열 FFE0 → FFF0 → Nordic UART) → 태블릿에서도 연결 가능
-    //   USB 시리얼 57600 / 시뮬레이션 (블루투스 COM(HC-05) 방식은 2026-11-26 삭제)
+    //   USB 시리얼 57600 / 블루투스 시리얼(HC-05, Web Serial SPP 9600 — PC COM 포트·안드로이드 Chrome 137+, 2026-11-27 다시 추가) / 시뮬레이션
     connection: ['ble', 'serial'],
     stop: {
       steps: [
@@ -217,7 +217,7 @@ window.ROBOTS = [
     // 01_inventory_bike.json control_page.path
     page: 'self-balancing-bike_app/web/index.html',
     pagesUrl: null,
-    // connection.type = ["ble","serial"] (HM-10/NUS BLE, USB 9600)
+    // connection.type = ["ble","serial"] (HM-10/NUS BLE, USB·HC-05 블루투스 시리얼 9600 — 안드로이드 Chrome 137+도 SPP 지원, 2026-11-27)
     connection: ['ble', 'serial'],
     stop: {
       steps: [

@@ -2,7 +2,7 @@
 
 이 문서만 읽고도 다른 계정·새 세션에서 이어서 작업할 수 있게 유지한다. 작업이 끝날 때마다 갱신한다.
 
-마지막 갱신: 2026-11-26 (펌웨어 선택 업로드, SMARS BLE, 전체 화면 버튼 위치)
+마지막 갱신: 2026-11-27 (SMARS·바이크 HC-05 블루투스 시리얼을 갤럭시 탭에서도)
 
 ## 1. 한눈에 보기
 - **목표:** 첫 화면을 4칸으로 나눠 로봇 4대(SMARS, Otto, 로봇 개, 셀프 밸런싱 바이크)의 생김새와 동작을 애니메이션으로 보여준다. 로봇을 고르면 기존 제어 웹으로 들어가고, "← 처음으로" 버튼이나 무입력 3분(+경고 15초) 뒤 로봇을 멈추고 첫 화면으로 돌아온다.
@@ -28,10 +28,10 @@
 ## 3. 로봇별 정보 (자세한 근거는 `_workspace/01_inventory_*.json`)
 | 로봇 | 폴더 / 레포 | 제어 웹 | 연결 | 허브가 쓰는 정지 방법 | 펌웨어 failsafe |
 | --- | --- | --- | --- | --- | --- |
-| SMARS | `smars_web` / kgh-DaC/lecture-SMARS (public) | `smars_web/twin/smars_console.html` | **BLE 기본**(Web Bluetooth, HM-10 계열 FFE0/FFF0/Nordic) / Web Serial 57600 (USB). 블루투스 COM(HC-05)은 2026-11-26 삭제 | `button.dp.stop[data-dir="S"]`에 **pointerdown** (click 안 됨) → `#btnDisconnect` | 600ms |
+| SMARS | `smars_web` / kgh-DaC/lecture-SMARS (public) | `smars_web/twin/smars_console.html` | **BLE 기본**(Web Bluetooth, HM-10 계열 FFE0/FFF0/Nordic) / Web Serial 57600 (USB) / 블루투스 시리얼 HC-05 9600(Web Serial SPP, 2026-11-27 다시 추가) | `button.dp.stop[data-dir="S"]`에 **pointerdown** (click 안 됨) → `#btnDisconnect` | 600ms |
 | Otto | `ottobot` / kgh-DaC/ottobot (public, 브랜치 `master`) | `ottobot/web/index.html` | BLE `OTTO2` (FFE0, notify FFE1, write FFE2) | `window.otto.link.stop()` 또는 `#btnStop` → `otto.link.disconnect()` | 1.5s |
 | 로봇 개 | `robot_dog` / kgh-DaC/robot-dog (public, `main`) | `robot_dog/esp32-robot-dog-code-master/software/robot_control_web/index.html` (`robot_page.html`은 런처라 안 씀) | localhost에서는 USB 게이트웨이 모드(`api/*`), Wi-Fi 핫스팟 | `#stop` click | 1s 리스, 기울기 20° |
-| 바이크 | `self-balancing-bike_app` / kgh-DaC/self-balancing-bike_app (public) | `self-balancing-bike_app/web/index.html` | BLE(FFE0/FFE1, Nordic UART) / Web Serial 9600 | `#estop` click (토글이라 `.active`면 건너뜀) → `#btnDisconnect` | 500ms |
+| 바이크 | `self-balancing-bike_app` / kgh-DaC/self-balancing-bike_app (public) | `self-balancing-bike_app/web/index.html` | BLE(FFE0/FFE1, Nordic UART) / Web Serial 9600 (USB·HC-05 블루투스 SPP) | `#estop` click (토글이라 `.active`면 건너뜀) → `#btnDisconnect` | 500ms |
 
 ## 4. 설계 핵심 (왜 이렇게 했는가)
 - **태블릿(안드로이드 Chrome):** 카드마다 이 기기에서 되는 연결을 기능 감지(`'bluetooth'/'serial' in navigator`)로 표시. 로봇 개는 `localOnly`라 로컬 허브 밖에서는 iframe 대신 로봇 Wi-Fi 페이지(http://192.168.4.1) 안내(`offsite`)를 띄운다(https 허브에서 http 로봇 IP는 혼합 콘텐츠로 막힘). 안드로이드 뒤로 가기는 history 항목으로 잡아 "처음으로"와 같이 안전 정지 후 복귀, 당겨서 새로고침 차단(overscroll-behavior), 전체 화면 버튼.
@@ -59,6 +59,7 @@
 - `self-balancing-bike_app/.claude/skills/bike-protocol`은 보드레이트(115200→실제 9600)·failsafe(없음→실제 있음) 서술이 낡았다(바이크 하네스에서 수정).
 - 로봇 개: 좌/우가 제자리 회전인지 곡선 보행인지 실물 확인 필요. 기존 보드 I2C SCL(GPIO22) 문제로 IMU 미검출.
 - Otto: 초음파 센서 무응답, 하드웨어 시험 진행 중.
+- SMARS·바이크의 블루투스 모듈은 **클래식 HC-05**(ZS-040 보드, EN 핀·버튼)라 BLE 목록에 안 나온다(Otto는 BLE). 갤럭시 탭에서는 페어링 후 Web Serial(안드로이드 Chrome 137+)로 연결하게 고쳤으나 **태블릿 실물 미시험**. 안 되면 HM-10/AT-09(CC2541) BLE 모듈로 교체(배선 같음, 펌웨어 변경 없음, AT로 9600 설정).
 
 ## 7. 파일 지도
 ```
@@ -99,3 +100,4 @@ obot-hub-fwbuild |
 | 2026-11-27 | 바이크 3D 창 축소, 조이스틱을 3D 오른쪽에(설정 카드는 넓은 화면에서 그 오른쪽, 좁으면 아래) |
 | 2026-11-27 | Otto 3D 머리 터치 센서 누르기(ottobot `9a06f02`). 로봇 개 Pages '로봇 페이지 열기' 빈 화면 보고: 192.168.4.1은 로봇 Wi-Fi(RobotDog-XXXX, AP 고정 IP) 안에서만 응답 → 다른 Wi-Fi에서 열면 빈 화면 로딩. 이 PC 스캔에서 RobotDog SSID 안 보임(로봇 꺼짐/범위 밖 추정). 안내 문구(단계·빈 화면 원인·인터넷 끊김·USB 로컬 허브 대안) 보강 |
 | 2026-11-27 | 로봇 개 온라인 허브: Pages에서 192.168.4.1 새 창 대신 **허브 창(iframe)에서 제어 페이지**를 열도록(`hostedOk`). 제어 페이지(robot_dog `4fc1147`)가 https 사본을 file:// 처럼 다뤄 USB 직렬(브라우저)·Wi-Fi(로봇 페이지 새 탭)·**시뮬레이터(새로 추가)**·연결 끊기를 보여 줌. web_page.h 재생성 → CI가 로봇 개 펌웨어를 다시 빌드함(로봇 재업로드는 안 함) |
+| 2026-11-27 | 갤럭시 탭에서 SMARS·바이크 HC-05 연결: 두 제어 웹의 Web Serial `requestPort`에 SPP(`allowedBluetoothServiceClassIds`) 추가. SMARS 콘솔에 '블루투스 시리얼 (HC-05)' 방식 재추가(smars_web), 바이크 안내·미지원 문구 수정(self-balancing-bike_app). 허브 iframe은 이미 `allow=serial`. check_hub 163/163, 실물 미시험 |
