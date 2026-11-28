@@ -3,3 +3,5 @@ _workspace_*/
 .claude/settings.local.json
 .fwbuild/
 tools/vendor-esptool/node_modules/
+# 원본 SMARS 작업 폴더(smars_web 하네스가 ../smars 로 참조, 허브에서는 쓰지 않음)
+smars/

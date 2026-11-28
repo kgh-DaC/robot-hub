@@ -54,9 +54,7 @@
 - Pages(https)에서는 로봇 개 USB 모드(serve.py 프록시 필요)가 안 되고, Wi-Fi 모드도 혼합 콘텐츠(https→http) 차단으로 안 될 가능성이 높다. 로봇 개는 로컬 허브로 쓴다.
 - 예약 워크플로는 레포에 60일간 활동이 없으면 GitHub가 멈춘다.
 - `robot_dog/tools/servoInitPose/web_control.ino:78`의 로봇 핫스팟 고정 비밀번호(약한 숫자열)는 사용자 승인 하에 public으로 공개됐다. 바꾸려면 로봇 개 하네스에서 펌웨어 값을 바꾼다.
-- ottobot·robot_dog `.gitignore`에 `_workspace/qa_tmp`, `node_modules` 등이 빠져 있다(각 로봇 하네스에서 처리).
 - ottobot·robot_dog에 커밋 안 된 변경이 있다(각 로봇 작업자의 진행 중 작업). 레포에는 올라가지 않았다.
-- `self-balancing-bike_app/.claude/skills/bike-protocol`은 보드레이트(115200→실제 9600)·failsafe(없음→실제 있음) 서술이 낡았다(바이크 하네스에서 수정).
 - 로봇 개: 좌/우가 제자리 회전인지 곡선 보행인지 실물 확인 필요. 기존 보드 I2C SCL(GPIO22) 문제로 IMU 미검출.
 - Otto: 초음파 센서 무응답, 하드웨어 시험 진행 중.
 - SMARS·바이크의 블루투스 모듈은 **클래식 HC-05**(ZS-040 보드, EN 핀·버튼)라 BLE 목록에 안 나온다(Otto는 BLE). 갤럭시 탭에서는 페어링 후 Web Serial(안드로이드 Chrome 137+)로 연결하게 고쳤으나 **태블릿 실물 미시험**. 안 되면 HM-10/AT-09(CC2541) BLE 모듈로 교체(배선 같음, 펌웨어 변경 없음, AT로 9600 설정).
@@ -110,3 +108,4 @@ obot-hub-fwbuild |
 | 2026-11-28 | SMARS 제어 웹 핀 연결(smars_web twin/smars_console.html): 쉴드 bluetooth 헤더를 D0·D1·미사용으로, HC-05는 A0·A1 직접 연결로 그림·비고 수정. check_hub 163/163 |
 | 2026-11-28 | SMARS M6 블루투스에 HC-05 RXD 분압(1kΩ·2kΩ) 이유·회로도 추가(smars_web a1/a1.js) |
 | 2026-11-28 | 커밋·푸시: smars_web dc561eb(핀 연결 카드·M6 분압), 볼앤빔 main 79b11fb(같은 a1.js — LESSON_SYNC_TOKEN 시크릿이 없어 CI 자동 동기화가 건너뛰어져 직접 푸시). CLAUDE.md에 언어 규칙(설명은 한글로) 추가. 볼앤빔 로컬은 zealous-mendel 브랜치에 같은 a1.js 변경이 미커밋으로 남아 있음 |
+| 2026-11-28 | 이어서 정리: ottobot e42b002·robot_dog b35268b `.gitignore` 보강(빌드 산출물·node_modules·_workspace/qa_tmp), robot_dog 빌드 폴더 2개(약 127MB)·__pycache__·.pytest_cache와 ottobot 업로드 로그 삭제, 바이크 680abfa bike-protocol 서술 수정(9600·failsafe 있음·HC-05). 허브 `.gitignore`에 `smars/`(원본 SMARS 폴더) 추가. 미해결 목록에서 두 항목 제거 |
