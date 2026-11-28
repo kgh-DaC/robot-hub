@@ -109,3 +109,4 @@ obot-hub-fwbuild |
 | 2026-11-28 | SMARS M6 블루투스에 HC-05 RXD 분압(1kΩ·2kΩ) 이유·회로도 추가(smars_web a1/a1.js) |
 | 2026-11-28 | 커밋·푸시: smars_web dc561eb(핀 연결 카드·M6 분압), 볼앤빔 main 79b11fb(같은 a1.js — LESSON_SYNC_TOKEN 시크릿이 없어 CI 자동 동기화가 건너뛰어져 직접 푸시). CLAUDE.md에 언어 규칙(설명은 한글로) 추가. 볼앤빔 로컬은 zealous-mendel 브랜치에 같은 a1.js 변경이 미커밋으로 남아 있음 |
 | 2026-11-28 | 이어서 정리: ottobot e42b002·robot_dog b35268b `.gitignore` 보강(빌드 산출물·node_modules·_workspace/qa_tmp), robot_dog 빌드 폴더 2개(약 127MB)·__pycache__·.pytest_cache와 ottobot 업로드 로그 삭제, 바이크 680abfa bike-protocol 서술 수정(9600·failsafe 있음·HC-05). 허브 `.gitignore`에 `smars/`(원본 SMARS 폴더) 추가. 미해결 목록에서 두 항목 제거 |
+| 2026-11-28 | 버그 수정(robot_dog e0458cd): start_hub.bat(localhost:8800) 허브 창 안에서 로봇 개 제어 페이지의 연결 카드·핀 연결 카드가 숨던 문제. 원인 `nested = framed && !isFile`(로봇 자체 사본이 Wi-Fi 창 안에 있을 때만 숨기려던 조건이 localhost 사본까지 잡음) → `&& !onGateway` 추가. tests/page_harness.js `hub` 모드와 시험 1개 추가, web_page.h 재생성, robot_dog 시험 154개 통과. CI가 로봇 개 펌웨어 재빌드(로봇 재업로드 불필요) |
