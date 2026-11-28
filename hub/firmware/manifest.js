@@ -114,19 +114,19 @@ window.HUB_FIRMWARE_MANIFEST = {
         "repo": "robot_dog",
         "url": "https://github.com/kgh-DaC/robot-dog.git",
         "path": "esp32-robot-dog-code-master/tools/servoInitPose",
-        "commit": "ed2fd308826f7d82efd6527b687f85a663088bc5",
-        "commitDate": "2026-11-28T01:02:52+09:00",
-        "head": "ed2fd308826f7d82efd6527b687f85a663088bc5",
+        "commit": "e0458cd051c159a7a0a6962dd9ed5b9cafc0b4e3",
+        "commitDate": "2026-11-28T16:28:31+09:00",
+        "head": "e0458cd051c159a7a0a6962dd9ed5b9cafc0b4e3",
         "dirty": false
       },
-      "built": "2026-11-27T16:04:34.550Z",
+      "built": "2026-11-28T07:30:46.426Z",
       "toolchain": {
         "arduinoCli": "1.5.1",
         "core": "esp32:esp32@3.3.12",
         "libraries": []
       },
       "size": {
-        "flash": 1160463,
+        "flash": 1160543,
         "flashMax": 1310720,
         "ram": 52124,
         "ramMax": 327680
@@ -162,8 +162,8 @@ window.HUB_FIRMWARE_MANIFEST = {
           "name": "app.bin",
           "kind": "bin",
           "address": 65536,
-          "size": 1160608,
-          "sha256": "94fec52bbf97cfd5caaafc5b22da00f6aa4ed35bf871abaa5e6f128c87aa1fb7"
+          "size": 1160688,
+          "sha256": "590364b8b15375ec3bbc8712cac0c3411b43c4966dfd775ae89d79d021a8063c"
         }
       ],
       "data": "hub/firmware/robotdog/firmware.data.js"
