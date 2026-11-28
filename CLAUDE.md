@@ -2,6 +2,9 @@
 
 SMARS(`smars_web`), Otto(`ottobot`), 로봇 개(`robot_dog`), 셀프 밸런싱 바이크(`self-balancing-bike_app`)의 기존 제어 웹을 하나의 첫 화면에서 고르고 쓰는 허브. 각 로봇 폴더는 독립 git 저장소이며 자기 하네스(CLAUDE.md)를 가진다. 허브 작업은 로봇 폴더를 수정하지 않는다.
 
+## 언어 규칙
+사용자에게 하는 설명·보고·질문은 모두 한글로 쓴다. 코드, 명령어, 파일 경로, 고유 명칭은 원문 그대로 둔다.
+
 ## 세션 종료 규칙
 작업을 마치거나 세션을 끝내기 전에 `HANDOFF.md`(현재 상태, 다음 할 일, 미해결, 변경 기록)를 갱신한다. 새 세션은 먼저 `HANDOFF.md`를 읽는다. 비밀 값은 적지 않는다.
 
@@ -17,3 +20,4 @@ SMARS(`smars_web`), Otto(`ottobot`), 로봇 개(`robot_dog`), 셀프 밸런싱 �
 | 2026-11-25 | Harness v2로 처음 구성 | 전체 | - |
 | 2026-11-25 | 인수 문서(HANDOFF.md)와 세션 종료 갱신 규칙 추가, 정지 설정을 stop.steps(이벤트 종류·skipIf)로 확장, 로봇 개 API 프록시(serve.py) 추가 | CLAUDE.md, hub-shell, hub-qa-check, robot-hub-orchestrator | 사용자 요청, 인벤토리 결과 |
 | 2026-11-26 | 펌웨어 선택 업로드 구조(hub/flash, hub/firmware, 빌드 스크립트·CI)와 시험(flow_firmware.mjs, test_stk500.mjs, 대화상자 중 무입력 복귀) 추가 | hub-shell, hub-qa-check | 사용자 요청, QA #11 |
+| 2026-11-28 | 언어 규칙(설명은 한글로) 추가 | CLAUDE.md | 사용자 요청 |

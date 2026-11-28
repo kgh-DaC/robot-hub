@@ -106,3 +106,7 @@ obot-hub-fwbuild |
 | 2026-11-28 | Otto 핀 연결 그림(ottobot ca6b11d): 위쪽 부품 블록을 헤더 순서(D13→D2: 부저·BLE·초음파·팔·다리)로, 블록 안 선 출발점도 핀 번호 순 → 연결선 꼬임 없음. 깃허브 페이지는 001cfa9부터 이미 새 그림이 배포돼 있었음(안 보이면 Ctrl+F5) |
 | 2026-11-28 | Otto 핀 연결 그림: 아날로그 쪽 연결선 끝을 S 칸으로(ottobot 서브모듈 갱신) |
 | 2026-11-28 | 로봇 개 제어 웹 핀 연결 카드를 메인 보드(hardware/pcb robotdog_main) 기준 그림 + 표 '기판 단자' 열로 (robot_dog ed2fd30). 핀 번호 변경 없음, robot_dog 테스트 153개 통과, web_page.h 재생성(펌웨어 업로드 안 함) |
+| 2026-11-28 | 폴더 정리(git 제외 파일만): `_workspace/` QA 캡처(png)·qa_dom.html·anim_preview.html·일회용 시험 스크립트(datacheck, qa_full, qa_fw_*) 삭제(인벤토리 JSON·01~05 보고서는 유지), `.fwbuild/build`(빌드는 %TEMP% 사용, 옛 산출물)·`.fwbuild/smars.json` 삭제. `.fwbuild/arduino-user`(라이브러리)·`tools/vendor-esptool/node_modules`는 재빌드용으로 유지. 로봇 폴더는 손대지 않음 |
+| 2026-11-28 | SMARS 제어 웹 핀 연결(smars_web twin/smars_console.html): 쉴드 bluetooth 헤더를 D0·D1·미사용으로, HC-05는 A0·A1 직접 연결로 그림·비고 수정. check_hub 163/163 |
+| 2026-11-28 | SMARS M6 블루투스에 HC-05 RXD 분압(1kΩ·2kΩ) 이유·회로도 추가(smars_web a1/a1.js) |
+| 2026-11-28 | 커밋·푸시: smars_web dc561eb(핀 연결 카드·M6 분압), 볼앤빔 main 79b11fb(같은 a1.js — LESSON_SYNC_TOKEN 시크릿이 없어 CI 자동 동기화가 건너뛰어져 직접 푸시). CLAUDE.md에 언어 규칙(설명은 한글로) 추가. 볼앤빔 로컬은 zealous-mendel 브랜치에 같은 a1.js 변경이 미커밋으로 남아 있음 |
